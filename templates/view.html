@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Linked Data Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        {% with main_subject = subjects[0] if subjects else None %}
+        {% if main_subject %}
+        <div class="main-subject">
+            <h1>{{ main_subject.subject_short }}</h1>
+            
+            {% if main_subject.types %}
+            <div class="types">
+                {% for type in main_subject.types %}
+                <span class="type-badge">{{ type }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if main_subject.labels %}
+            <div class="labels">
+                {% for label in main_subject.labels %}
+                <div class="label">{{ label }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if main_subject.descriptions %}
+            <div class="descriptions">
+                {% for description in main_subject.descriptions %}
+                <div class="description">{{ description }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% set ns = namespace(last_predicate=None) %}
+            <table>
+                <tbody>
+                    {% for group in main_subject.predicate_groups %}
+                        {% for triple in group.predicates %}
+                            <tr>
+                                {% if triple.predicate != ns.last_predicate %}
+                                    <td title="{{ triple.predicate }}">{{ triple.predicate_short }}</td>
+                                    {% set ns.last_predicate = triple.predicate %}
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                <td title="{{ triple.object }}">
+                                    {% if triple.object.startswith('http') %}
+                                        <a href="/{{ triple.object }}">{{ triple.object_short }}</a>
+                                    {% else %}
+                                        {{ triple.object_short }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        {% for subject_group in subjects[1:] %}
+        <div class="subject-group">
+            <h3 class="subject-header">{{ subject_group.subject_short }}</h3>
+            
+            {% set ns = namespace(last_predicate=None) %}
+            <table>
+                <tbody>
+                    {% for group in subject_group.predicate_groups %}
+                        {% for triple in group.predicates %}
+                            <tr>
+                                {% if triple.predicate != ns.last_predicate %}
+                                    <td title="{{ triple.predicate }}">{{ triple.predicate_short }}</td>
+                                    {% set ns.last_predicate = triple.predicate %}
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                <td title="{{ triple.object }}">
+                                    {% if triple.object.startswith('http') %}
+                                        <a href="/{{ triple.object }}">{{ triple.object_short }}</a>
+                                    {% else %}
+                                        {{ triple.object_short }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+
+        <div class="formats">
+            <h3>Available Formats:</h3>
+            <ul>
+                <li><a href="{{ request.path }}">HTML</a></li>
+                <li><a href="{{ request.path }}" type="application/rdf+xml">RDF/XML</a></li>
+                <li><a href="{{ request.path }}" type="text/turtle">Turtle</a></li>
+                <li><a href="{{ request.path }}" type="application/ld+json">JSON-LD</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
