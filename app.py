@@ -60,17 +60,49 @@ def query_sparql_endpoint(uri):
         CONSTRUCT {{
             ?s ?p ?o .
             ?o ?p2 ?o2 .
+            ?o2 ?p3 ?o3 .
         }}
         WHERE {{
-            VALUES ?s {{ <{query_uri}> }}
-            {{
-                ?s ?p ?o .
+            {{  # First part with query_uri
+                VALUES ?s {{ <{query_uri}> }}
+                {{
+                    ?s ?p ?o .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                    FILTER(isBlank(?o2))
+                    ?o2 ?p3 ?o3 .
+                }}
             }}
             UNION
-            {{
-                ?s ?p ?o .
-                FILTER(isBlank(?o))
-                ?o ?p2 ?o2 .
+            {{  # Second part with original request uri
+                VALUES ?s {{ <{uri}> }}
+                {{
+                    ?s ?p ?o .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                    FILTER(isBlank(?o2))
+                    ?o2 ?p3 ?o3 .
+                }}
             }}
         }}
     """)
@@ -244,17 +276,49 @@ def resolve_uri(uri):
         CONSTRUCT {{
             ?s ?p ?o .
             ?o ?p2 ?o2 .
+            ?o2 ?p3 ?o3 .
         }}
         WHERE {{
-            VALUES ?s {{ <{query_uri}> }}
-            {{
-                ?s ?p ?o .
+            {{  # First part with query_uri
+                VALUES ?s {{ <{query_uri}> }}
+                {{
+                    ?s ?p ?o .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                    FILTER(isBlank(?o2))
+                    ?o2 ?p3 ?o3 .
+                }}
             }}
             UNION
-            {{
-                ?s ?p ?o .
-                FILTER(isBlank(?o))
-                ?o ?p2 ?o2 .
+            {{  # Second part with original request uri
+                VALUES ?s {{ <{uri}> }}
+                {{
+                    ?s ?p ?o .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                }}
+                UNION
+                {{
+                    ?s ?p ?o .
+                    FILTER(isBlank(?o))
+                    ?o ?p2 ?o2 .
+                    FILTER(isBlank(?o2))
+                    ?o2 ?p3 ?o3 .
+                }}
             }}
         }}
     """)

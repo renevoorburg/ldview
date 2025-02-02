@@ -1,5 +1,5 @@
 # SPARQL endpoint configuratie
-SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
+SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 
 # Namespace configuratie
 NAMESPACES = {
@@ -50,6 +50,18 @@ DESCRIPTION_PREDICATES = [
 # Predicaat groepen voor geordende weergave
 PREDICATE_GROUPS = [
     [
+        'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+    ],
+    [
+        'http://www.w3.org/2004/02/skos/core#prefLabel',
+        'http://www.w3.org/2000/01/rdf-schema#label',
+        'http://purl.org/dc/terms/title',
+        'http://purl.org/dc/elements/1.1/title',
+        'http://schema.org/name',
+        'http://data.bibliotheken.nl/rdanl#preferredNameOfPerson',
+        'http://schema.org/familyName',
+        'http://schema.org/givenName',
+        'http://schema.org/alternateName',
         'http://data.bibliotheken.nl/rdanl#givenName',
         'http://data.bibliotheken.nl/rdanl#surname',
         'http://data.bibliotheken.nl/rdanl#nameOfPerson',
@@ -57,6 +69,19 @@ PREDICATE_GROUPS = [
         'http://data.bibliotheken.nl/rdanl#variantAccessPointForPerson'
     ],
     [
+        'http://www.w3.org/2004/02/skos/core#definition',
+        'http://purl.org/dc/terms/description',
+        'http://purl.org/dc/elements/1.1/description',
+        'http://schema.org/description',
+        'http://www.w3.org/2000/01/rdf-schema#comment',
+        'http://data.bibliotheken.nl/rdanl#biographicalInformation'
+    ],
+    [
+        'http://schema.org/nationality',
+    ],
+    [
+        'http://schema.org/birthDate',
+        'http://schema.org/deathDate',
         'http://data.bibliotheken.nl/rdanl#dateOfBirth',
         'http://data.bibliotheken.nl/rdanl#dateOfDeath'
     ],
@@ -64,7 +89,11 @@ PREDICATE_GROUPS = [
         'http://www.w3.org/2004/02/skos/core#broader',
         'http://www.w3.org/2004/02/skos/core#narrower',
         'http://www.w3.org/2004/02/skos/core#related'
-    ]
+    ],
+    [
+        'http://www.w3.org/2002/07/owl#sameAs',
+        'http://www.w3.org/2004/02/skos/core#exactMatch'
+    ]   
 ]
 
 # Predicaten die niet in de hoofdtabel getoond moeten worden

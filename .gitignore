@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Virtual Environment
+venv/
+ENV/
+.env
+
+# Logs en debug bestanden
+debug.log
+
+# IDE specifiek
+.vscode/
+.idea/
+
+# Editor tijdelijke bestanden
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Test gerelateerd
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Installatie mappen
+build/
+dist/
+*.egg-info/
+
+# Configuratie bestanden
+config.py  # Expliciet negeren van config met gevoelige data
