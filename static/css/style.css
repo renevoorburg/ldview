@@ -64,6 +64,13 @@ h1 {
     font-size: 1.1em;
 }
 
+.main-description {
+    margin: 0.5em 0 1em;
+    font-size: 1.1em;
+    line-height: 1.4;
+    color: #666;
+}
+
 .subject-group {
     margin-bottom: 2rem;
     border: 1px solid #e0e0e0;

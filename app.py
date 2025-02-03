@@ -170,14 +170,23 @@ def group_predicates(predicates):
     
     return result
 
+def uri_to_id(uri):
+    """
+    Convert document URI to id URI if needed
+    """
+    if config.URI_PATTERNS['doc'] in uri:
+        return transform_uri(uri, config.URI_PATTERNS['doc'], config.URI_PATTERNS['id'])
+    return uri
+
 def process_subject(subject_uri, graph, is_main_subject=False):
     """Process a subject URI and return its data"""
     # Get all predicates and objects for this subject
     predicates = []
     types = []
-    labels = []
-    descriptions = []
-
+    main_label = None  # Single label for the header
+    main_description_predicate = None  # Track the first matching description predicate
+    main_descriptions = []  # Collect all values for the first matching description predicate
+    
     is_blank = subject_uri.startswith('_:') or subject_uri.startswith('n')  # Also check for 'n' prefix
     logger.debug(f"Processing subject: {subject_uri} (blank node: {is_blank})")
 
@@ -209,18 +218,22 @@ def process_subject(subject_uri, graph, is_main_subject=False):
         obj = str(o)
         logger.debug(f"Found triple: {subject_uri} {predicate} {obj}")
 
-        # Skip hidden predicates only for main subject and not for blank nodes
-        if not is_blank and is_main_subject and predicate in config.HIDDEN_PREDICATES:
-            # Still process labels and descriptions for main subject
-            if predicate in config.LABEL_PREDICATES:
-                labels.append(obj)
-                logger.debug(f"Added label for {subject_uri}: {obj}")
-            elif predicate in config.DESCRIPTION_PREDICATES:
-                descriptions.append(obj)
-                logger.debug(f"Added description for {subject_uri}: {obj}")
-            continue
+        # For main subject, check for the first label if we haven't found one yet
+        if is_main_subject and main_label is None and predicate in config.LABEL_PREDICATES:
+            main_label = obj
+            logger.debug(f"Set main label for {subject_uri}: {obj}")
 
-        # For blank nodes or non-hidden predicates, include all predicates
+        # For main subject, collect all values for the first matching description predicate
+        if is_main_subject and predicate in config.DESCRIPTION_PREDICATES:
+            if main_description_predicate is None:
+                main_description_predicate = predicate
+                main_descriptions.append(obj)
+                logger.debug(f"Added first description for {subject_uri}: {obj}")
+            elif predicate == main_description_predicate:
+                main_descriptions.append(obj)
+                logger.debug(f"Added additional description for {subject_uri}: {obj}")
+
+        # For all predicates, include in the table
         predicates.append({
             'predicate': predicate,
             'predicate_short': shorten_uri(predicate),
@@ -236,23 +249,18 @@ def process_subject(subject_uri, graph, is_main_subject=False):
     # Group predicates according to configuration
     predicate_groups = group_predicates(predicates)
 
+    # Combine all descriptions for the first matching predicate into a single string
+    main_description = ' '.join(main_descriptions) if main_descriptions else None
+
     return {
         'subject': subject_uri,
         'subject_short': shorten_uri(subject_uri),
         'types': types,
-        'labels': labels if is_main_subject else [],
-        'descriptions': descriptions if is_main_subject else [],
+        'main_label': main_label if is_main_subject else None,
+        'main_description': main_description if is_main_subject else None,
         'predicate_groups': predicate_groups,
         'is_blank': is_blank
     }
-
-def uri_to_id(uri):
-    """
-    Convert document URI to id URI if needed
-    """
-    if config.URI_PATTERNS['doc'] in uri:
-        return transform_uri(uri, config.URI_PATTERNS['doc'], config.URI_PATTERNS['id'])
-    return uri
 
 @app.route('/<path:uri>')
 def resolve_uri(uri):

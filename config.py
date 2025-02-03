@@ -1,5 +1,5 @@
 # SPARQL endpoint configuratie
-SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
+SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 
 # Namespace configuratie
 NAMESPACES = {
@@ -95,11 +95,6 @@ PREDICATE_GROUPS = [
         'http://www.w3.org/2004/02/skos/core#exactMatch'
     ]   
 ]
-
-# Predicaten die niet in de hoofdtabel getoond moeten worden
-HIDDEN_PREDICATES = [
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
-] + LABEL_PREDICATES + DESCRIPTION_PREDICATES
 
 # HTTP status codes
 REDIRECT_STATUS_CODE = 303  # See Other

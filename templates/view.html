@@ -1,28 +1,26 @@
 <!DOCTYPE html>
 <html>
+{% with main_subject = subjects[0] if subjects else None %}
 <head>
-    <title>Linked Data Viewer</title>
+    <title>{% if main_subject and main_subject.main_label %}{{ main_subject.main_label }}{% elif main_subject %}{{ main_subject.subject_short }}{% else %}Linked Data Viewer{% endif %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
-        {% with main_subject = subjects[0] if subjects else None %}
         {% if main_subject %}
         <div class="main-subject">
-            <h1>{{ main_subject.subject_short }}</h1>
+            <h1>{% if main_subject.main_label %}{{ main_subject.main_label }}{% else %}{{ main_subject.subject_short }}{% endif %}</h1>
             
+            {% if main_subject.main_description %}
+            <div class="main-description">
+                {{ main_subject.main_description }}
+            </div>
+            {% endif %}
+
             {% if main_subject.types %}
             <div class="types">
                 {% for type in main_subject.types %}
                 <span class="type-badge">{{ type }}</span>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            {% if main_subject.labels %}
-            <div class="labels">
-                {% for label in main_subject.labels %}
-                <div class="label">{{ label }}</div>
                 {% endfor %}
             </div>
             {% endif %}
@@ -49,7 +47,7 @@
                                 {% endif %}
                                 <td title="{{ triple.object }}">
                                     {% if triple.object.startswith('http') %}
-                                        <a href="/{{ triple.object }}">{{ triple.object_short }}</a>
+                                        <a href="{{ triple.object }}">{{ triple.object_short }}</a>
                                     {% else %}
                                         {{ triple.object_short }}
                                     {% endif %}
@@ -61,7 +59,6 @@
             </table>
         </div>
         {% endif %}
-        {% endwith %}
         
         {% for subject_group in subjects[1:] %}
         <div class="subject-group">
@@ -81,7 +78,7 @@
                                 {% endif %}
                                 <td title="{{ triple.object }}">
                                     {% if triple.object.startswith('http') %}
-                                        <a href="/{{ triple.object }}">{{ triple.object_short }}</a>
+                                        <a href="{{ triple.object }}">{{ triple.object_short }}</a>
                                     {% else %}
                                         {{ triple.object_short }}
                                     {% endif %}
@@ -106,3 +103,4 @@
     </div>
 </body>
 </html>
+{% endwith %}
