@@ -267,72 +267,72 @@ def resolve_uri(uri):
     """
     Resolve a URI and return its representation
     """
-    # Convert document URI to id URI if needed
-    query_uri = uri_to_id(uri)
-    if not query_uri:
-        return render_template('error.html', 
-            message="Invalid URI pattern",
-            uri=uri), 400
-    
-    # Query the endpoint
-    sparql = SPARQLWrapper(config.SPARQL_ENDPOINT)
-    sparql.setTimeout(10)  # Set 10 second timeout
-    sparql.setQuery(f"""
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        
-        CONSTRUCT {{
-            ?s ?p ?o .
-            ?o ?p2 ?o2 .
-            ?o2 ?p3 ?o3 .
-        }}
-        WHERE {{
-            {{  # First part with query_uri
-                VALUES ?s {{ <{query_uri}> }}
-                {{
-                    ?s ?p ?o .
-                }}
-                UNION
-                {{
-                    ?s ?p ?o .
-                    FILTER(isBlank(?o))
-                    ?o ?p2 ?o2 .
-                }}
-                UNION
-                {{
-                    ?s ?p ?o .
-                    FILTER(isBlank(?o))
-                    ?o ?p2 ?o2 .
-                    FILTER(isBlank(?o2))
-                    ?o2 ?p3 ?o3 .
-                }}
-            }}
-            UNION
-            {{  # Second part with original request uri
-                VALUES ?s {{ <{uri}> }}
-                {{
-                    ?s ?p ?o .
-                }}
-                UNION
-                {{
-                    ?s ?p ?o .
-                    FILTER(isBlank(?o))
-                    ?o ?p2 ?o2 .
-                }}
-                UNION
-                {{
-                    ?s ?p ?o .
-                    FILTER(isBlank(?o))
-                    ?o ?p2 ?o2 .
-                    FILTER(isBlank(?o2))
-                    ?o2 ?p3 ?o3 .
-                }}
-            }}
-        }}
-    """)
-    sparql.setReturnFormat('turtle')
-    
     try:
+        # Convert document URI to id URI if needed
+        query_uri = uri_to_id(uri)
+        if not query_uri:
+            return render_template('error.html', 
+                message="Invalid URI pattern",
+                uri=uri), 400
+        
+        # Query the endpoint
+        sparql = SPARQLWrapper(config.SPARQL_ENDPOINT)
+        sparql.setTimeout(10)  # Set 10 second timeout
+        sparql.setQuery(f"""
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            
+            CONSTRUCT {{
+                ?s ?p ?o .
+                ?o ?p2 ?o2 .
+                ?o2 ?p3 ?o3 .
+            }}
+            WHERE {{
+                {{  # First part with query_uri
+                    VALUES ?s {{ <{query_uri}> }}
+                    {{
+                        ?s ?p ?o .
+                    }}
+                    UNION
+                    {{
+                        ?s ?p ?o .
+                        FILTER(isBlank(?o))
+                        ?o ?p2 ?o2 .
+                    }}
+                    UNION
+                    {{
+                        ?s ?p ?o .
+                        FILTER(isBlank(?o))
+                        ?o ?p2 ?o2 .
+                        FILTER(isBlank(?o2))
+                        ?o2 ?p3 ?o3 .
+                    }}
+                }}
+                UNION
+                {{  # Second part with original request uri
+                    VALUES ?s {{ <{uri}> }}
+                    {{
+                        ?s ?p ?o .
+                    }}
+                    UNION
+                    {{
+                        ?s ?p ?o .
+                        FILTER(isBlank(?o))
+                        ?o ?p2 ?o2 .
+                    }}
+                    UNION
+                    {{
+                        ?s ?p ?o .
+                        FILTER(isBlank(?o))
+                        ?o ?p2 ?o2 .
+                        FILTER(isBlank(?o2))
+                        ?o2 ?p3 ?o3 .
+                    }}
+                }}
+            }}
+        """)
+        sparql.setReturnFormat('turtle')
+        
         results = sparql.query().convert()
         logger.debug(f"Query executed successfully")
         
@@ -346,78 +346,85 @@ def resolve_uri(uri):
             logger.debug(f"Got direct graph result, type: {type(results)}")
             g = results
             
-        # Debug: log all triples
-        logger.debug("All triples in graph:")
-        triple_count = 0
-        for s, p, o in g:
-            triple_count += 1
-            logger.debug(f"Triple {triple_count}:")
-            logger.debug(f"  Subject: {s} (type: {type(s)})")
-            logger.debug(f"  Predicate: {p} (type: {type(p)})")
-            logger.debug(f"  Object: {o} (type: {type(o)})")
-            logger.debug("---")
-        logger.debug(f"Total triples found: {triple_count}")
-        
-        # Return appropriate format
-        if request.accept_mimetypes.best_match(['text/html']):
-            # Get unique subjects from the graph
-            unique_subjects = {str(s) for s in g.subjects()}
-            logger.debug(f"Unique subjects found: {len(unique_subjects)}")
-            for s in unique_subjects:
-                logger.debug(f"Subject: {s}")
-            
-            # Process each unique subject
-            subjects = []
-            for s in unique_subjects:
-                logger.debug(f"\nProcessing subject: {s}")
-                subject_data = process_subject(s, g, is_main_subject=s == query_uri)
-                logger.debug(f"Subject data:")
-                logger.debug(f"  Types: {subject_data['types']}")
-                logger.debug(f"  Is blank: {subject_data['is_blank']}")
-                logger.debug(f"  Predicate groups: {subject_data['predicate_groups']}")
-                logger.debug("---")
-                subjects.append(subject_data)
-            
-            # Sort subjects: main subject first, then blank nodes, then others
-            main_subject = None
-            blank_nodes = []
-            other_subjects = []
-            
-            for subject in subjects:
-                if subject['subject'] == query_uri:
-                    main_subject = subject
-                    logger.debug(f"Found main subject: {query_uri}")
-                elif subject['subject'].startswith('_:'):
-                    blank_nodes.append(subject)
-                    logger.debug(f"Found blank node: {subject['subject']}")
-                else:
-                    other_subjects.append(subject)
-                    logger.debug(f"Found other subject: {subject['subject']}")
-            
-            logger.debug(f"Total subjects: {len(subjects)}")
-            logger.debug(f"Blank nodes found: {len(blank_nodes)}")
-            
-            # Combine in correct order
-            sorted_subjects = []
-            if main_subject:
-                sorted_subjects.append(main_subject)
-            sorted_subjects.extend(sorted(blank_nodes, key=lambda x: x['subject']))
-            sorted_subjects.extend(sorted(other_subjects, key=lambda x: x['subject']))
+        # Get the accept header and format parameter
+        accept_header = request.headers.get('Accept', 'text/html')
+        format_param = request.args.get('format')
 
-            logger.debug(f"Final sorted subjects: {len(sorted_subjects)}")
-            
-            return render_template('view.html',
-                uri=uri,
-                query_uri=query_uri,
-                query_uri_short=shorten_uri(query_uri),
-                subjects=sorted_subjects
-            )
-        else:
-            format = 'turtle'
-            return Response(
-                g.serialize(format=format),
-                content_type='text/turtle'
-            )
+        # Determine the format to return
+        if format_param:
+            if format_param == 'xml':
+                return Response(g.serialize(format='xml'),
+                            content_type='application/rdf+xml; charset=utf-8')
+            elif format_param == 'turtle':
+                return Response(g.serialize(format='turtle'),
+                            content_type='text/turtle; charset=utf-8')
+            elif format_param == 'json-ld':
+                return Response(g.serialize(format='json-ld'),
+                            content_type='application/ld+json; charset=utf-8')
+        elif accept_header:
+            if accept_header == 'application/rdf+xml':
+                return Response(g.serialize(format='xml'),
+                            content_type='application/rdf+xml; charset=utf-8')
+            elif accept_header == 'text/turtle':
+                return Response(g.serialize(format='turtle'),
+                            content_type='text/turtle; charset=utf-8')
+            elif accept_header == 'application/ld+json':
+                return Response(g.serialize(format='json-ld'),
+                            content_type='application/ld+json; charset=utf-8')
+
+        # Default to HTML
+        # Get unique subjects from the graph
+        unique_subjects = {str(s) for s in g.subjects()}
+        logger.debug(f"Unique subjects found: {len(unique_subjects)}")
+        for s in unique_subjects:
+            logger.debug(f"Subject: {s}")
+        
+        # Process each unique subject
+        subjects = []
+        for s in unique_subjects:
+            logger.debug(f"\nProcessing subject: {s}")
+            subject_data = process_subject(s, g, is_main_subject=s == query_uri)
+            logger.debug(f"Subject data:")
+            logger.debug(f"  Types: {subject_data['types']}")
+            logger.debug(f"  Is blank: {subject_data['is_blank']}")
+            logger.debug(f"  Predicate groups: {subject_data['predicate_groups']}")
+            logger.debug("---")
+            subjects.append(subject_data)
+        
+        # Sort subjects: main subject first, then blank nodes, then others
+        main_subject = None
+        blank_nodes = []
+        other_subjects = []
+        
+        for subject in subjects:
+            if subject['subject'] == query_uri:
+                main_subject = subject
+                logger.debug(f"Found main subject: {query_uri}")
+            elif subject['subject'].startswith('_:'):
+                blank_nodes.append(subject)
+                logger.debug(f"Found blank node: {subject['subject']}")
+            else:
+                other_subjects.append(subject)
+                logger.debug(f"Found other subject: {subject['subject']}")
+        
+        logger.debug(f"Total subjects: {len(subjects)}")
+        logger.debug(f"Blank nodes found: {len(blank_nodes)}")
+        
+        # Combine in correct order
+        sorted_subjects = []
+        if main_subject:
+            sorted_subjects.append(main_subject)
+        sorted_subjects.extend(sorted(blank_nodes, key=lambda x: x['subject']))
+        sorted_subjects.extend(sorted(other_subjects, key=lambda x: x['subject']))
+
+        logger.debug(f"Final sorted subjects: {len(sorted_subjects)}")
+        
+        return render_template('view.html',
+            uri=uri,
+            query_uri=query_uri,
+            query_uri_short=shorten_uri(query_uri),
+            subjects=sorted_subjects
+        )
             
     except Exception as e:
         logging.exception("Error processing request")
