@@ -48,6 +48,8 @@
                                 <td title="{{ triple.object }}">
                                     {% if triple.object.startswith('http') %}
                                         <a href="{{ triple.object }}">{{ triple.object_short }}</a>
+                                    {% elif triple.is_blank_object %}
+                                        <a href="#{{ triple.object }}">{{ triple.object_short }}</a>
                                     {% else %}
                                         {{ triple.object_short }}
                                     {% endif %}
@@ -61,7 +63,7 @@
         {% endif %}
         
         {% for subject_group in subjects[1:] %}
-        <div class="subject-group">
+        <div class="subject-group" id="{{ subject_group.subject }}">
             <h3 class="subject-header">{{ subject_group.subject_short }}</h3>
             
             {% set ns = namespace(last_predicate=None) %}
@@ -79,6 +81,8 @@
                                 <td title="{{ triple.object }}">
                                     {% if triple.object.startswith('http') %}
                                         <a href="{{ triple.object }}">{{ triple.object_short }}</a>
+                                    {% elif triple.is_blank_object %}
+                                        <a href="#{{ triple.object }}">{{ triple.object_short }}</a>
                                     {% else %}
                                         {{ triple.object_short }}
                                     {% endif %}
