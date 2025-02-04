@@ -47,6 +47,13 @@ DESCRIPTION_PREDICATES = [
     'http://data.bibliotheken.nl/rdanl#biographicalInformation'
 ]
 
+# Image predicates
+IMAGE_PREDICATES = {
+    'http://xmlns.com/foaf/0.1/depiction',
+    'http://schema.org/thumbnailUrl',
+    'http://schema.org/image'
+}
+
 # Predicaat groepen voor geordende weergave
 PREDICATE_GROUPS = [
     [
@@ -65,6 +72,7 @@ PREDICATE_GROUPS = [
         'http://data.bibliotheken.nl/rdanl#givenName',
         'http://data.bibliotheken.nl/rdanl#surname',
         'http://data.bibliotheken.nl/rdanl#nameOfPerson',
+        'http://xmlns.com/foaf/0.1/nick',
         'http://data.bibliotheken.nl/rdanl#accessPointForPerson',
         'http://data.bibliotheken.nl/rdanl#variantAccessPointForPerson'
     ],
@@ -80,10 +88,12 @@ PREDICATE_GROUPS = [
         'http://schema.org/nationality',
     ],
     [
-        'http://schema.org/birthDate',
-        'http://schema.org/deathDate',
         'http://data.bibliotheken.nl/rdanl#dateOfBirth',
-        'http://data.bibliotheken.nl/rdanl#dateOfDeath'
+        'http://schema.org/birthDate',
+        'http://schema.org/birthPlace',
+        'http://data.bibliotheken.nl/rdanl#dateOfDeath',
+        'http://schema.org/deathDate',
+        'http://schema.org/deathPlace'
     ],
     [
         'http://www.w3.org/2004/02/skos/core#broader',

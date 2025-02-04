@@ -9,29 +9,38 @@
     <div class="container">
         {% if main_subject %}
         <div class="main-subject">
-            <h1>{% if main_subject.main_label %}{{ main_subject.main_label }}{% else %}{{ main_subject.subject_short }}{% endif %}</h1>
-            
-            {% if main_subject.main_description %}
-            <div class="main-description">
-                {{ main_subject.main_description }}
-            </div>
-            {% endif %}
+            <div class="header-section">
+                {% if main_subject.main_label %}
+                <h1>{{ main_subject.main_label }}</h1>
+                {% endif %}
 
-            {% if main_subject.types %}
-            <div class="types">
-                {% for type in main_subject.types %}
-                <span class="type-badge">{{ type }}</span>
-                {% endfor %}
-            </div>
-            {% endif %}
+                <div class="uri-line">
+                    <h2>{{ main_subject.subject }}</h2>
+                    {% if main_subject.types %}
+                    <div class="types">
+                        {% for type in main_subject.types %}
+                        <span class="type-badge">{{ type }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if main_subject.main_description %}
+                <div class="main-description">
+                    {{ main_subject.main_description }}
+                </div>
+                {% endif %}
 
-            {% if main_subject.descriptions %}
-            <div class="descriptions">
-                {% for description in main_subject.descriptions %}
-                <div class="description">{{ description }}</div>
-                {% endfor %}
+                {% if main_subject.images %}
+                <div class="images-section">
+                    {% for image in main_subject.images %}
+                    <div class="image-container" title="{{ image.predicate_short }}">
+                        <img src="{{ image.url }}" alt="{{ main_subject.main_label or main_subject.subject_short }}">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
 
             {% set ns = namespace(last_predicate=None) %}
             <table>

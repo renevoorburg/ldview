@@ -65,7 +65,7 @@ h1 {
 }
 
 .main-description {
-    margin: 0.5em 0 1em;
+    margin: 0.2em 0 1em;
     font-size: 1.1em;
     line-height: 1.4;
     color: #666;
@@ -167,4 +167,70 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+.header-section {
+    margin-bottom: 2em;
+}
+
+.header-section h1 {
+    font-size: 1.6em;
+    margin: 0 0 0.2em 0;
+    color: #333;
+}
+
+.uri-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.2em;
+}
+
+.uri-line h2 {
+    font-size: 1.1em;
+    color: #666;
+    margin: 0;
+    word-break: break-all;
+    flex: 1;
+    padding-right: 2em;
+}
+
+.types {
+    flex: 0 0 auto;
+    text-align: right;
+}
+
+.type-badge {
+    display: inline-block;
+    background-color: #f0f0f0;
+    padding: 0.3em 0.6em;
+    margin: 0.2em;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+h2 {
+    font-size: 1.6em;
+    margin: 0 0 0.5em 0;
+    color: #333;
+}
+
+.images-section {
+    display: flex;
+    gap: 1em;
+    margin: 1em 0;
+    flex-wrap: wrap;
+}
+
+.image-container {
+    flex: 0 0 auto;
+}
+
+.image-container img {
+    height: 200px;
+    width: auto;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

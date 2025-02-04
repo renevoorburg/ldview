@@ -183,6 +183,7 @@ def process_subject(subject_uri, graph, is_main_subject=False):
     # Get all predicates and objects for this subject
     predicates = []
     types = []
+    images = []  # List for image URLs
     main_label = None  # Single label for the header
     main_description_predicate = None  # Track the first matching description predicate
     main_descriptions = []  # Collect all values for the first matching description predicate
@@ -217,6 +218,15 @@ def process_subject(subject_uri, graph, is_main_subject=False):
         predicate = str(p)
         obj = str(o)
         logger.debug(f"Found triple: {subject_uri} {predicate} {obj}")
+
+        # Check if this is an image predicate
+        if predicate in config.IMAGE_PREDICATES:
+            images.append({
+                'url': obj,
+                'predicate': predicate,
+                'predicate_short': shorten_uri(predicate)
+            })
+            continue
 
         # For main subject, check for the first label if we haven't found one yet
         if is_main_subject and main_label is None and predicate in config.LABEL_PREDICATES:
@@ -259,7 +269,8 @@ def process_subject(subject_uri, graph, is_main_subject=False):
         'main_label': main_label if is_main_subject else None,
         'main_description': main_description if is_main_subject else None,
         'predicate_groups': predicate_groups,
-        'is_blank': is_blank
+        'is_blank': is_blank,
+        'images': images if is_main_subject else []  # Only include images for main subject
     }
 
 @app.route('/<path:uri>')
