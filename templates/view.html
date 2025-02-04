@@ -3,114 +3,121 @@
 {% block content %}
     <div class="content">
         {% with main_subject = subjects[0] if subjects else None %}
-            <div class="main-subject">
-                <div class="header-section">
-                    {% if main_subject.main_label %}
-                        <h1>{{ main_subject.main_label }}</h1>
-                    {% endif %}
+            {% if main_subject %}
+                <div class="main-subject">
+                    <div class="header-section">
+                        {% if main_subject.main_label %}
+                            <h1>{{ main_subject.main_label }}</h1>
+                        {% endif %}
 
-                    <div class="uri-line">
-                        <h2><a href="{{ main_subject.subject }}">{{ main_subject.subject }}</a></h2>
-                        {% if main_subject.types %}
-                            <div class="types">
-                                {% for type in main_subject.types %}
-                                    <span class="type-badge">
-                                        <span class="prefix">{{ type.prefix }}</span><span class="local">{{ type.local }}</span>
-                                    </span>
-                                {% endfor %}
+                        <div class="uri-line">
+                            <h2><a href="{{ main_subject.subject }}">{{ main_subject.subject }}</a></h2>
+                            {% if main_subject.types %}
+                                <div class="types">
+                                    {% for type in main_subject.types %}
+                                        <span class="type-badge">
+                                            <span class="prefix">{{ type.prefix }}</span><span class="local">{{ type.local }}</span>
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if main_subject.main_description %}
+                            <div class="description">
+                                {{ main_subject.main_description }}
                             </div>
                         {% endif %}
                     </div>
 
-                    {% if main_subject.main_description %}
-                        <div class="description">
-                            {{ main_subject.main_description }}
+                    {% if main_subject.images %}
+                        <div class="images-section">
+                            {% for image in main_subject.images %}
+                                <div class="image-container" title="{{ image.predicate_short.prefix }}{{ image.predicate_short.local }}">
+                                    <a href="{{ image.url }}" target="_blank">
+                                        <img src="{{ image.url }}" alt="{{ main_subject.main_label or main_subject.subject_short }}">
+                                    </a>
+                                </div>
+                            {% endfor %}
                         </div>
                     {% endif %}
-                </div>
 
-                {% if main_subject.images %}
-                    <div class="images-section">
-                        {% for image in main_subject.images %}
-                            <div class="image-container" title="{{ image.predicate_short.prefix }}{{ image.predicate_short.local }}">
-                                <a href="{{ image.url }}" target="_blank">
-                                    <img src="{{ image.url }}" alt="{{ main_subject.main_label or main_subject.subject_short }}">
-                                </a>
-                            </div>
-                        {% endfor %}
+                    {% set ns = namespace(last_predicate=None) %}
+                    <table class="properties-table">
+                        <tbody>
+                            {% for group in main_subject.predicate_groups %}
+                                {% for triple in group.predicates %}
+                                    <tr>
+                                        {% if triple.predicate != ns.last_predicate %}
+                                            <td class="predicate-cell" title="{{ triple.predicate }}">
+                                                <span class="predicate">
+                                                    <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                </span>
+                                            </td>
+                                            {% set ns.last_predicate = triple.predicate %}
+                                        {% else %}
+                                            <td class="predicate-cell"></td>
+                                        {% endif %}
+                                        <td class="object-cell" title="{{ triple.object }}">
+                                            {% if triple.object.startswith('http') %}
+                                                <a href="{{ triple.object }}" class="uri-object">{{ triple.object }}</a>
+                                            {% elif triple.is_blank_object %}
+                                                <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
+                                            {% else %}
+                                                {{ triple.object }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            {% set has_blank_nodes = false %}
+            {% for subject in subjects[1:] %}
+                {% if subject.is_blank %}
+                    {% if not has_blank_nodes %}
+                        <div class="blank-nodes-section">
+                        {% set has_blank_nodes = true %}
+                    {% endif %}
+                    <div class="blank-node" id="{{ subject.subject }}">
+                        <h3>{{ subject.subject }}</h3>
+                        {% set ns = namespace(last_predicate=None) %}
+                        <table class="properties-table">
+                            <tbody>
+                                {% for group in subject.predicate_groups %}
+                                    {% for triple in group.predicates %}
+                                        <tr>
+                                            {% if triple.predicate != ns.last_predicate %}
+                                                <td class="predicate-cell" title="{{ triple.predicate }}">
+                                                    <span class="predicate">
+                                                        <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                    </span>
+                                                </td>
+                                                {% set ns.last_predicate = triple.predicate %}
+                                            {% else %}
+                                                <td class="predicate-cell"></td>
+                                            {% endif %}
+                                            <td class="object-cell" title="{{ triple.object }}">
+                                                {% if triple.object.startswith('http') %}
+                                                    <a href="{{ triple.object }}" class="uri-object">{{ triple.object }}</a>
+                                                {% elif triple.is_blank_object %}
+                                                    <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
+                                                {% else %}
+                                                    {{ triple.object }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 {% endif %}
-
-                {% set ns = namespace(last_predicate=None) %}
-                <table class="properties-table">
-                    <tbody>
-                        {% for group in main_subject.predicate_groups %}
-                            {% for triple in group.predicates %}
-                                <tr>
-                                    {% if triple.predicate != ns.last_predicate %}
-                                        <td class="predicate-cell" title="{{ triple.predicate }}">
-                                            <span class="predicate">
-                                                <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
-                                            </span>
-                                        </td>
-                                        {% set ns.last_predicate = triple.predicate %}
-                                    {% else %}
-                                        <td class="predicate-cell"></td>
-                                    {% endif %}
-                                    <td class="object-cell" title="{{ triple.object }}">
-                                        {% if triple.object.startswith('http') %}
-                                            <a href="{{ triple.object }}" class="uri-object">{{ triple.object }}</a>
-                                        {% elif triple.is_blank_object %}
-                                            <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
-                                        {% else %}
-                                            {{ triple.object }}
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if blank_nodes %}
-                <div class="blank-nodes-section">
-                    <h2>Related Information</h2>
-                    {% for blank_node in blank_nodes %}
-                        <div class="blank-node" id="{{ blank_node.subject }}">
-                            <h3>{{ blank_node.subject }}</h3>
-                            {% set ns = namespace(last_predicate=None) %}
-                            <table class="properties-table">
-                                <tbody>
-                                    {% for group in blank_node.predicate_groups %}
-                                        {% for triple in group.predicates %}
-                                            <tr>
-                                                {% if triple.predicate != ns.last_predicate %}
-                                                    <td class="predicate-cell" title="{{ triple.predicate }}">
-                                                        <span class="predicate">
-                                                            <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
-                                                        </span>
-                                                    </td>
-                                                    {% set ns.last_predicate = triple.predicate %}
-                                                {% else %}
-                                                    <td class="predicate-cell"></td>
-                                                {% endif %}
-                                                <td class="object-cell" title="{{ triple.object }}">
-                                                    {% if triple.object.startswith('http') %}
-                                                        <a href="{{ triple.object }}" class="uri-object">{{ triple.object }}</a>
-                                                    {% elif triple.is_blank_object %}
-                                                        <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
-                                                    {% else %}
-                                                        {{ triple.object }}
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endfor %}
+            {% endfor %}
+            {% if has_blank_nodes %}
                 </div>
             {% endif %}
 
