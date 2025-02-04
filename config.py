@@ -1,6 +1,7 @@
 # SPARQL endpoint configuratie
 SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 
+
 # Namespace configuratie
 NAMESPACES = {
     'rdanl': 'http://data.bibliotheken.nl/rdanl#',

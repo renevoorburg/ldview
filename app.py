@@ -119,12 +119,21 @@ def query_sparql_endpoint(uri):
 
 def shorten_uri(uri):
     """
-    Vervang namespace URIs met geconfigureerde prefixes
+    Shorten a URI by using common prefixes, returns dict with prefix and local
     """
-    for prefix, ns_uri in config.NAMESPACES.items():
-        if uri.startswith(ns_uri):
-            return f"{prefix}:{uri[len(ns_uri):]}"
-    return uri
+    if not isinstance(uri, str):
+        return {'prefix': '', 'local': str(uri)}
+    
+    if uri.startswith('_:'):
+        return {'prefix': '', 'local': uri}
+        
+    for prefix, namespace in config.NAMESPACES.items():
+        if uri.startswith(namespace):
+            return {
+                'prefix': prefix + ':',
+                'local': uri[len(namespace):]
+            }
+    return {'prefix': '', 'local': uri}
 
 def find_matching_values(predicates, triples):
     """Find all matching values for a list of predicates, maintaining predicate order"""
@@ -206,10 +215,10 @@ def process_subject(subject_uri, graph, is_main_subject=False):
     type_count = 0
     for s, p, o in graph.triples((subject_node, RDF.type, None)):
         type_uri = str(o)
-        types.append(shorten_uri(type_uri))
+        types.append(shorten_uri(type_uri))  # Now returns dict with prefix and local
         type_count += 1
         logger.debug(f"Found type for {subject_uri}: {type_uri}")
-
+    
     logger.debug(f"Found {type_count} types for subject {subject_uri}")
 
     # Then process other predicates

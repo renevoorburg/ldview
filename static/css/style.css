@@ -225,6 +225,16 @@ h2 {
 
 .image-container {
     flex: 0 0 auto;
+    transition: transform 0.2s;
+}
+
+.image-container:hover {
+    transform: scale(1.02);
+}
+
+.image-container a {
+    display: block;
+    text-decoration: none;
 }
 
 .image-container img {
@@ -233,4 +243,26 @@ h2 {
     object-fit: cover;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s;
+}
+
+.image-container:hover img {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.predicate {
+    white-space: nowrap;
+}
+
+.prefix {
+    color: #666;
+}
+
+.local {
+    font-weight: 600;
+    color: #333;
+}
+
+a .local {
+    color: inherit;
 }

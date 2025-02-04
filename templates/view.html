@@ -19,7 +19,9 @@
                     {% if main_subject.types %}
                     <div class="types">
                         {% for type in main_subject.types %}
-                        <span class="type-badge">{{ type }}</span>
+                        <span class="type-badge">
+                            <span class="prefix">{{ type.prefix }}</span><span class="local">{{ type.local }}</span>
+                        </span>
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -34,8 +36,10 @@
                 {% if main_subject.images %}
                 <div class="images-section">
                     {% for image in main_subject.images %}
-                    <div class="image-container" title="{{ image.predicate_short }}">
-                        <img src="{{ image.url }}" alt="{{ main_subject.main_label or main_subject.subject_short }}">
+                    <div class="image-container" title="{{ image.predicate_short.prefix }}{{ image.predicate_short.local }}">
+                        <a href="{{ image.url }}" target="_blank">
+                            <img src="{{ image.url }}" alt="{{ main_subject.main_label or main_subject.subject_short }}">
+                        </a>
                     </div>
                     {% endfor %}
                 </div>
@@ -49,18 +53,22 @@
                         {% for triple in group.predicates %}
                             <tr>
                                 {% if triple.predicate != ns.last_predicate %}
-                                    <td title="{{ triple.predicate }}">{{ triple.predicate_short }}</td>
+                                    <td title="{{ triple.predicate }}">
+                                        <span class="predicate">
+                                            <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                        </span>
+                                    </td>
                                     {% set ns.last_predicate = triple.predicate %}
                                 {% else %}
                                     <td></td>
                                 {% endif %}
                                 <td title="{{ triple.object }}">
                                     {% if triple.object.startswith('http') %}
-                                        <a href="{{ triple.object }}">{{ triple.object_short }}</a>
+                                        <a href="{{ triple.object }}">{{ triple.object_short.prefix }}<span class="local">{{ triple.object_short.local }}</span></a>
                                     {% elif triple.is_blank_object %}
-                                        <a href="#{{ triple.object }}">{{ triple.object_short }}</a>
+                                        <a href="#{{ triple.object }}">{{ triple.object }}</a>
                                     {% else %}
-                                        {{ triple.object_short }}
+                                        {{ triple.object }}
                                     {% endif %}
                                 </td>
                             </tr>
@@ -91,9 +99,9 @@
                                     {% if triple.object.startswith('http') %}
                                         <a href="{{ triple.object }}">{{ triple.object_short }}</a>
                                     {% elif triple.is_blank_object %}
-                                        <a href="#{{ triple.object }}">{{ triple.object_short }}</a>
+                                        <a href="#{{ triple.object }}">{{ triple.object }}</a>
                                     {% else %}
-                                        {{ triple.object_short }}
+                                        {{ triple.object }}
                                     {% endif %}
                                 </td>
                             </tr>
