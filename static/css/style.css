@@ -33,12 +33,22 @@ h1 {
 
 .type-badge {
     display: inline-block;
-    padding: 0.3rem 0.8rem;
-    margin: 0 0.5rem 0.5rem 0;
-    background-color: #3498db;
-    color: white;
-    border-radius: 15px;
-    font-size: 0.9em;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #dee2e6;
+    color: #2980b9;
+}
+
+.type-badge .prefix {
+    color: #2980b9;
+}
+
+.type-badge .local {
+    color: #2980b9;
+    font-weight: 600;
 }
 
 .labels {
@@ -98,12 +108,18 @@ h1 {
 }
 
 table {
+    table-layout: fixed;
     width: 100%;
     border-collapse: collapse;
     margin-top: 0.5rem;
 }
 
 td {
+    max-width: 600px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-all;
+    hyphens: none;
     padding: 12px;
     border-bottom: 1px solid #dee2e6;
     vertical-align: top;
@@ -123,8 +139,12 @@ td:first-child:empty {
     border-left: 2px solid transparent;
 }
 
-td:nth-child(2) {
+td:last-child {
     width: 70%;
+    color: #2980b9;
+}
+
+td:nth-child(2) {
     color: #27ae60;
 }
 
@@ -250,19 +270,68 @@ h2 {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
+.blank-nodes-section {
+    margin-top: 2em;
+    border-top: 1px solid #eee;
+    padding-top: 1em;
+}
+
+.blank-nodes-section h2 {
+    color: #666;
+    font-size: 1.4em;
+    margin-bottom: 1em;
+}
+
+.blank-node {
+    margin-bottom: 2em;
+    background: #f9f9f9;
+    padding: 1em;
+    border-radius: 4px;
+}
+
+.blank-node h3 {
+    color: #666;
+    font-size: 1.1em;
+    margin-bottom: 1em;
+    font-family: monospace;
+}
+
+.prefix {
+    color: #2980b9;
+}
+
+.local {
+    color: #333;
+    font-weight: 600;
+}
+
+.uri-object {
+    text-decoration: none;
+    color: #2980b9;
+}
+
+.uri-object:hover {
+    text-decoration: underline;
+}
+
+.uri-object .local {
+    color: #2980b9;
+}
+
+.blank-node-ref {
+    font-family: monospace;
+    color: #2980b9;
+    text-decoration: none;
+}
+
+.blank-node-ref:hover {
+    text-decoration: underline;
+}
+
 .predicate {
     white-space: nowrap;
 }
 
-.prefix {
-    color: #666;
-}
-
-.local {
-    font-weight: 600;
+.predicate .local {
     color: #333;
-}
-
-a .local {
-    color: inherit;
 }

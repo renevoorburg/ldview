@@ -443,7 +443,8 @@ def resolve_uri(uri):
             uri=uri,
             query_uri=query_uri,
             query_uri_short=shorten_uri(query_uri),
-            subjects=sorted_subjects
+            subjects=sorted_subjects,
+            blank_nodes=blank_nodes
         )
             
     except Exception as e:

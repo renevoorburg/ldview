@@ -8,7 +8,13 @@
     <div class="container">
         <h1>Error</h1>
         <div class="error-message">
-            {{ error.description }}
+            {% if error and error.description %}
+                {{ error.description }}
+            {% elif message %}
+                {{ message }}
+            {% else %}
+                An unknown error occurred
+            {% endif %}
         </div>
     </div>
 </body>
