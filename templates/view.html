@@ -51,7 +51,9 @@
                                         {% if triple.predicate != ns.last_predicate %}
                                             <td class="predicate-cell" title="{{ triple.predicate }}">
                                                 <span class="predicate">
-                                                    <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                    <a href="{{ triple.predicate }}" class="predicate-link">
+                                                        <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                    </a>
                                                 </span>
                                             </td>
                                             {% set ns.last_predicate = triple.predicate %}
@@ -81,7 +83,13 @@
                     <div class="blank-node">
                         <h3>
                             <a href="{{ subject.subject }}">{{ subject.subject }}</a>
-                            {% if subject.relation_to_main %} ({{ subject.relation_to_main.prefix }}{{ subject.relation_to_main.local }}){% endif %}
+                            {% if subject.relation_to_main %} 
+                                (<span class="predicate">
+                                    <a href="{{ subject.relation_uri }}" class="predicate-link">
+                                        <span class="prefix">{{ subject.relation_to_main.prefix }}</span><span class="local">{{ subject.relation_to_main.local }}</span>
+                                    </a>
+                                </span>)
+                            {% endif %}
                         </h3>
                         {% set ns = namespace(last_predicate=None) %}
                         <table class="properties-table">
@@ -92,7 +100,9 @@
                                             {% if triple.predicate != ns.last_predicate %}
                                                 <td class="predicate-cell" title="{{ triple.predicate }}">
                                                     <span class="predicate">
-                                                        <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                        <a href="{{ triple.predicate }}" class="predicate-link">
+                                                            <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                        </a>
                                                     </span>
                                                 </td>
                                                 {% set ns.last_predicate = triple.predicate %}
@@ -126,7 +136,13 @@
                         {% set has_blank_nodes = true %}
                     {% endif %}
                     <div class="blank-node" id="{{ subject.subject }}">
-                        <h3>{{ subject.subject }}{% if subject.relation_to_main %} ({{ subject.relation_to_main.prefix }}{{ subject.relation_to_main.local }}){% endif %}</h3>
+                        <h3>{{ subject.subject }}{% if subject.relation_to_main %} 
+                                (<span class="predicate">
+                                    <a href="{{ subject.relation_uri }}" class="predicate-link">
+                                        <span class="prefix">{{ subject.relation_to_main.prefix }}</span><span class="local">{{ subject.relation_to_main.local }}</span>
+                                    </a>
+                                </span>)
+                            {% endif %}</h3>
                         {% set ns = namespace(last_predicate=None) %}
                         <table class="properties-table">
                             <tbody>
@@ -136,7 +152,9 @@
                                             {% if triple.predicate != ns.last_predicate %}
                                                 <td class="predicate-cell" title="{{ triple.predicate }}">
                                                     <span class="predicate">
-                                                        <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                        <a href="{{ triple.predicate }}" class="predicate-link">
+                                                            <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                        </a>
                                                     </span>
                                                 </td>
                                                 {% set ns.last_predicate = triple.predicate %}

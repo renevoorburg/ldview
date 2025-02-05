@@ -128,11 +128,13 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
 
     # Voor niet-main subjects, zoek naar inkomende relaties van het main subject
     relation_to_main = None
+    relation_uri = None
     if not is_main_subject:
         for s, p, o in graph.triples((None, None, subject_node)):
             if str(s) == id_uri:  # Als de relatie van het main subject komt
-                predicate_str = shorten_uri(str(p))
-                relation_to_main = predicate_str
+                predicate_str = str(p)
+                relation_to_main = shorten_uri(predicate_str)
+                relation_uri = predicate_str
                 logger.debug(f"Found relation to main: {str(s)} -> {predicate_str} -> {subject_uri}")
 
     for s, p, o in graph.triples((subject_node, None, None)):
@@ -200,7 +202,8 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         'predicate_groups': predicate_groups,
         'is_blank': is_blank,
         'images': images if is_main_subject else [],  # Only include images for main subject
-        'relation_to_main': relation_to_main  # Add relation to main subject for linked subjects
+        'relation_to_main': relation_to_main,  # Add relation to main subject for linked subjects
+        'relation_uri': relation_uri
     }
 
 @app.route('/<path:uri>')

@@ -1,0 +1,12 @@
+/* Bestaande styles behouden */
+
+/* Predicate link styling */
+/* Style for predicate links */
+.predicate-link {
+    text-decoration: none;  /* Verwijder de standaard onderstreping */
+    color: inherit;         /* Gebruik dezelfde kleur als de parent */
+}
+
+.predicate-link:hover {
+    text-decoration: underline;  /* Toon onderstreping bij hover */
+}
