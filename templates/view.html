@@ -75,6 +75,49 @@
                 </div>
             {% endif %}
 
+            {# Toon andere URI subjects #}
+            {% for subject in subjects[1:] %}
+                {% if not subject.is_blank %}
+                    <div class="blank-node">
+                        <h3>
+                            <a href="{{ subject.subject }}">{{ subject.subject }}</a>
+                            {% if subject.relation_to_main %} ({{ subject.relation_to_main.prefix }}{{ subject.relation_to_main.local }}){% endif %}
+                        </h3>
+                        {% set ns = namespace(last_predicate=None) %}
+                        <table class="properties-table">
+                            <tbody>
+                                {% for group in subject.predicate_groups %}
+                                    {% for triple in group.predicates %}
+                                        <tr>
+                                            {% if triple.predicate != ns.last_predicate %}
+                                                <td class="predicate-cell" title="{{ triple.predicate }}">
+                                                    <span class="predicate">
+                                                        <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
+                                                    </span>
+                                                </td>
+                                                {% set ns.last_predicate = triple.predicate %}
+                                            {% else %}
+                                                <td class="predicate-cell"></td>
+                                            {% endif %}
+                                            <td class="object-cell" title="{{ triple.object }}">
+                                                {% if triple.object.startswith('http') %}
+                                                    <a href="{{ triple.object }}" class="uri-object">{{ triple.object }}</a>
+                                                {% elif triple.is_blank_object %}
+                                                    <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
+                                                {% else %}
+                                                    {{ triple.object }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {# Toon blank nodes #}
             {% set has_blank_nodes = false %}
             {% for subject in subjects[1:] %}
                 {% if subject.is_blank %}
@@ -83,7 +126,7 @@
                         {% set has_blank_nodes = true %}
                     {% endif %}
                     <div class="blank-node" id="{{ subject.subject }}">
-                        <h3>{{ subject.subject }}{% if subject.relation_to_main %} ({{ subject.relation_to_main }}){% endif %}</h3>
+                        <h3>{{ subject.subject }}{% if subject.relation_to_main %} ({{ subject.relation_to_main.prefix }}{{ subject.relation_to_main.local }}){% endif %}</h3>
                         {% set ns = namespace(last_predicate=None) %}
                         <table class="properties-table">
                             <tbody>

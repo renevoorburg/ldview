@@ -3,7 +3,11 @@ SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gew
 
 # SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 
-KNOWN_URI_PATTERNS = [ 'https://data.digitopia.nl/' ]
+KNOWN_URI_PATTERNS = [ 
+    'https://data.digitopia.nl/',
+    'https://data.digitopia.nl/doc/',
+    'https://data.digitopia.nl/id/'
+]
 
 
 # Namespace configuratie

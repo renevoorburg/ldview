@@ -81,7 +81,7 @@ def group_predicates(predicates):
 
 
 
-def process_subject(subject_uri, graph, is_main_subject=False):
+def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
     """Process a subject URI and return its data"""
     # Get all predicates and objects for this subject
     predicates = []
@@ -126,6 +126,15 @@ def process_subject(subject_uri, graph, is_main_subject=False):
             blank_node_relations[linked_subject] = predicate_str
             logger.debug(f"Link from main subject: {subject_uri} -> {predicate_str} -> {linked_subject}")
 
+    # Voor niet-main subjects, zoek naar inkomende relaties van het main subject
+    relation_to_main = None
+    if not is_main_subject:
+        for s, p, o in graph.triples((None, None, subject_node)):
+            if str(s) == id_uri:  # Als de relatie van het main subject komt
+                predicate_str = shorten_uri(str(p))
+                relation_to_main = predicate_str
+                logger.debug(f"Found relation to main: {str(s)} -> {predicate_str} -> {subject_uri}")
+
     for s, p, o in graph.triples((subject_node, None, None)):
         predicate = str(p)
         obj = str(o)
@@ -136,11 +145,8 @@ def process_subject(subject_uri, graph, is_main_subject=False):
 
         # Set relation to main subject for linked subjects
         if not is_main_subject:
-            relation_to_main = blank_node_relations.get(obj, None)
             logger.debug(f"Relation to main for {subject_uri}: {relation_to_main}")
-        else:
-            relation_to_main = None
-
+        
         # Check if this is an image predicate
         if predicate in config.IMAGE_PREDICATES:
             images.append({
@@ -238,55 +244,47 @@ def resolve_uri(uri):
     # Get unique subjects from the graph
     unique_subjects = {str(s) for s in rdf_graph.subjects()}
     logger.debug(f"Unique subjects found: {len(unique_subjects)}")
+    logger.debug("All subjects in graph:")
     for s in unique_subjects:
-        logger.debug(f"Subject: {s}")
+        logger.debug(f"  - {s}")
     
     # Process each unique subject
     subjects = []
     for s in unique_subjects:
-        # logger.debug(f"\nProcessing subject: {s}")
-        subject_data = process_subject(s, rdf_graph, is_main_subject=s == id_uri)
-        # logger.debug(f"Subject data:")
-        # logger.debug(f"  Types: {subject_data['types']}")
-        # logger.debug(f"  Is blank: {subject_data['is_blank']}")
-        # logger.debug(f"  Predicate groups: {subject_data['predicate_groups']}")
-        # logger.debug("---")
+        logger.debug(f"\nProcessing subject: {s}")
+        subject_data = process_subject(s, rdf_graph, is_main_subject=s == id_uri, id_uri=id_uri)
         subjects.append(subject_data)
     
-    # Sort subjects: main subject first, then blank nodes, then others
+    # Sort subjects: main subject first, then all others
     main_subject = None
-    blank_nodes = []
     other_subjects = []
+    blank_nodes = []
     
     for subject in subjects:
+        logger.debug(f"Sorting subject: {subject['subject']}")
         if subject['subject'] == id_uri:
+            logger.debug("  -> This is main subject")
             main_subject = subject
-            # logger.debug(f"Found main subject: {id_uri}")
-        elif subject['subject'].startswith('_:'):
-            blank_nodes.append(subject)
-            # logger.debug(f"Found blank node: {subject['subject']}")
         else:
-            other_subjects.append(subject)
-            # logger.debug(f"Found other subject: {subject['subject']}")
-    
-    # logger.debug(f"Total subjects: {len(subjects)}")
-    # logger.debug(f"Blank nodes found: {len(blank_nodes)}")
+            logger.debug("  -> This is other subject")
+            if subject['is_blank']:
+                blank_nodes.append(subject)
+            else:
+                other_subjects.append(subject)
     
     # Combine in correct order
     sorted_subjects = []
     if main_subject:
         sorted_subjects.append(main_subject)
-    sorted_subjects.extend(sorted(blank_nodes, key=lambda x: x['subject']))
     sorted_subjects.extend(sorted(other_subjects, key=lambda x: x['subject']))
-
-    logger.debug(f"Final sorted subjects: {len(sorted_subjects)}")
+    sorted_subjects.extend(blank_nodes)  # Add blank nodes at the end
     
     return render_template('view.html',
         uri=uri,
         query_uri=id_uri,
         query_uri_short=shorten_uri(id_uri),
         subjects=sorted_subjects,
-        blank_nodes=blank_nodes
+        blank_nodes=blank_nodes  # Only pass actual blank nodes
     )
 
 @app.errorhandler(500)
