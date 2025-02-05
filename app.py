@@ -246,15 +246,15 @@ def resolve_uri(uri):
     # Default to HTML
     # Get unique subjects from the graph
     unique_subjects = {str(s) for s in rdf_graph.subjects()}
-    logger.debug(f"Unique subjects found: {len(unique_subjects)}")
-    logger.debug("All subjects in graph:")
-    for s in unique_subjects:
-        logger.debug(f"  - {s}")
+    # logger.debug(f"Unique subjects found: {len(unique_subjects)}")
+    # logger.debug("All subjects in graph:")
+    # for s in unique_subjects:
+    #     logger.debug(f"  - {s}")
     
     # Process each unique subject
     subjects = []
     for s in unique_subjects:
-        logger.debug(f"\nProcessing subject: {s}")
+        # logger.debug(f"\nProcessing subject: {s}")
         subject_data = process_subject(s, rdf_graph, is_main_subject=s == id_uri, id_uri=id_uri)
         subjects.append(subject_data)
     
@@ -264,12 +264,12 @@ def resolve_uri(uri):
     blank_nodes = []
     
     for subject in subjects:
-        logger.debug(f"Sorting subject: {subject['subject']}")
+        # logger.debug(f"Sorting subject: {subject['subject']}")
         if subject['subject'] == id_uri:
             logger.debug("  -> This is main subject")
             main_subject = subject
         else:
-            logger.debug("  -> This is other subject")
+            # logger.debug("  -> This is other subject")
             if subject['is_blank']:
                 blank_nodes.append(subject)
             elif subject['subject'] == uri:  # Alleen de opgevraagde URI toevoegen
