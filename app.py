@@ -10,6 +10,8 @@ import sys
 from uri_utils import transform_uri, is_identity_uri, get_sparql_uri, shorten_uri, page_uri_to_identity_uri, matches_known_uri_patterns
 from sparql_utils import SPARQLEndpoint
 from turtle_files import TurtleFiles
+from rdf_source import ResourceNotFound
+from content_negotiation import ContentNegotiator
 
 app = Flask(__name__)
 
@@ -200,7 +202,6 @@ def resolve_uri(uri):
     """
     Resolve a URI and return its representation
     """
-
     if not matches_known_uri_patterns(uri):
         return render_template('error.html', 
             message="404 - URI not found",
@@ -212,33 +213,27 @@ def resolve_uri(uri):
     page_uri = uri
     id_uri = page_uri_to_identity_uri(uri)
     
-    rdf_graph = rdf_source.get_rdf_for_uri(id_uri, page_uri)
+    try:
+        rdf_graph = rdf_source.get_rdf_for_uri(id_uri, page_uri)
+    except ResourceNotFound as e:
+        return render_template('error.html', 
+            message=f"404 - Resource not found: {str(e)}",
+            uri=uri), 404
+    except Exception as e:
+        logger.error(f"Error retrieving RDF data: {str(e)}")
+        return render_template('error.html',
+            message=f"500 - Internal server error: {str(e)}",
+            uri=uri), 500
 
-    # Get the accept header and format parameter
-    accept_header = request.headers.get('Accept', 'text/html')
-    format_param = request.args.get('format')
-
-    # Determine the format to return
-    if format_param:
-        if format_param == 'xml':
-            return Response(rdf_graph.serialize(format='xml'),
-                        content_type='application/rdf+xml; charset=utf-8')
-        elif format_param == 'turtle':
-            return Response(rdf_graph.serialize(format='turtle'),
-                        content_type='text/turtle; charset=utf-8')
-        elif format_param == 'json-ld':
-            return Response(rdf_graph.serialize(format='json-ld'),
-                        content_type='application/ld+json; charset=utf-8')
-    elif accept_header:
-        if accept_header == 'application/rdf+xml':
-            return Response(rdf_graph.serialize(format='xml'),
-                        content_type='application/rdf+xml; charset=utf-8')
-        elif accept_header == 'text/turtle':
-            return Response(rdf_graph.serialize(format='turtle'),
-                        content_type='text/turtle; charset=utf-8')
-        elif accept_header == 'application/ld+json':
-            return Response(rdf_graph.serialize(format='json-ld'),
-                        content_type='application/ld+json; charset=utf-8')
+    # Handle content negotiation
+    response = ContentNegotiator.get_response(
+        rdf_graph,
+        format_param=request.args.get('format'),
+        accept_header=request.headers.get('Accept', 'text/html')
+    )
+    
+    if response:
+        return response
 
     # Default to HTML
     # Get unique subjects from the graph
@@ -294,7 +289,6 @@ def resolve_uri(uri):
         subjects=sorted_subjects,
         blank_nodes=blank_nodes
     )
-            
 
 @app.errorhandler(500)
 def internal_error(error):

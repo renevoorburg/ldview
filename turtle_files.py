@@ -2,7 +2,7 @@ from rdflib import Graph
 import logging
 import os
 from urllib.parse import urlparse
-from rdf_source import RDFSource
+from rdf_source import RDFSource, ResourceNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class TurtleFiles(RDFSource):
             Graph: RDFLib Graph containing the RDF data
             
         Raises:
-            FileNotFoundError: If the Turtle file does not exist
+            ResourceNotFound: If the Turtle file does not exist or contains no data
         """
         try:
             file_path = self._uri_to_file_path(id_uri)
@@ -60,12 +60,18 @@ class TurtleFiles(RDFSource):
             
             if not os.path.exists(file_path):
                 logger.error(f"Turtle file not found: {file_path}")
-                raise FileNotFoundError(f"No Turtle file found for URI: {id_uri}")
+                raise ResourceNotFound(f"No Turtle file found for URI: {id_uri}")
             
             graph = Graph()
             graph.parse(file_path, format='turtle')
+            
+            if len(graph) == 0:
+                raise ResourceNotFound(f"No RDF data found in file for URI: {id_uri}")
+                
             return graph
             
         except Exception as e:
+            if isinstance(e, ResourceNotFound):
+                raise
             logger.error(f"Error reading Turtle file for URI {id_uri}: {str(e)}")
             raise

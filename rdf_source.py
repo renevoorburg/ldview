@@ -4,6 +4,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class ResourceNotFound(Exception):
+    """Exception raised when an RDF resource cannot be found"""
+    pass
+
 class RDFSource(ABC):
     """
     Abstract base class for RDF data sources
@@ -20,5 +24,8 @@ class RDFSource(ABC):
             
         Returns:
             Graph: RDFLib Graph containing the RDF data
+            
+        Raises:
+            ResourceNotFound: When the requested resource cannot be found
         """
         pass

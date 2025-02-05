@@ -2,7 +2,7 @@ from SPARQLWrapper import SPARQLWrapper
 from rdflib import Graph
 import logging
 import config
-from rdf_source import RDFSource
+from rdf_source import RDFSource, ResourceNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,10 @@ class SPARQLEndpoint(RDFSource):
             page_uri: Optional page URI if different from id_uri
             
         Returns:
-            Graph: RDFLib Graph containing the query results
+            Graph: RDFLib Graph containing the RDF data
+            
+        Raises:
+            ResourceNotFound: When no data is found for the given URI
         """
         if page_uri is None:
             page_uri = id_uri
@@ -85,16 +88,26 @@ class SPARQLEndpoint(RDFSource):
         """)
         sparql.setReturnFormat('turtle')
         
-        results = sparql.query().convert()
-        
-        # Parse into graph
-        rdf_graph = Graph()
-        if isinstance(results, bytes):
-            logger.debug(f"Got bytes result, length: {len(results)}")
-            logger.debug(f"Result content: {results[:1000]}")  # First 1000 bytes
-            rdf_graph.parse(data=results, format='turtle')
-        else:
-            logger.debug(f"Got direct graph result, type: {type(results)}")
-            rdf_graph = results
+        try:
+            results = sparql.query().convert()
             
-        return rdf_graph
+            # Parse into graph
+            rdf_graph = Graph()
+            if isinstance(results, bytes):
+                logger.debug(f"Got bytes result, length: {len(results)}")
+                logger.debug(f"Result content: {results[:1000]}")  # First 1000 bytes
+                rdf_graph.parse(data=results, format='turtle')
+            else:
+                logger.debug(f"Got direct graph result, type: {type(results)}")
+                rdf_graph = results
+                
+            if len(rdf_graph) == 0:
+                raise ResourceNotFound(f"No data found in SPARQL endpoint for URI: {id_uri}")
+                
+            return rdf_graph
+            
+        except Exception as e:
+            if isinstance(e, ResourceNotFound):
+                raise
+            logger.error(f"Error querying SPARQL endpoint for URI {id_uri}: {str(e)}")
+            raise
