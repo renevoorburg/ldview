@@ -293,7 +293,6 @@ h2 {
     color: #666;
     font-size: 1.1em;
     margin-bottom: 1em;
-    font-family: monospace;
 }
 
 .prefix {
@@ -319,7 +318,6 @@ h2 {
 }
 
 .blank-node-ref {
-    font-family: monospace;
     color: #2980b9;
     text-decoration: none;
 }
