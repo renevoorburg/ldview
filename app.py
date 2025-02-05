@@ -231,7 +231,6 @@ def resolve_uri(uri):
         format_param=request.args.get('format'),
         accept_header=request.headers.get('Accept', 'text/html')
     )
-    
     if response:
         return response
 
@@ -245,13 +244,13 @@ def resolve_uri(uri):
     # Process each unique subject
     subjects = []
     for s in unique_subjects:
-        logger.debug(f"\nProcessing subject: {s}")
+        # logger.debug(f"\nProcessing subject: {s}")
         subject_data = process_subject(s, rdf_graph, is_main_subject=s == id_uri)
-        logger.debug(f"Subject data:")
-        logger.debug(f"  Types: {subject_data['types']}")
-        logger.debug(f"  Is blank: {subject_data['is_blank']}")
-        logger.debug(f"  Predicate groups: {subject_data['predicate_groups']}")
-        logger.debug("---")
+        # logger.debug(f"Subject data:")
+        # logger.debug(f"  Types: {subject_data['types']}")
+        # logger.debug(f"  Is blank: {subject_data['is_blank']}")
+        # logger.debug(f"  Predicate groups: {subject_data['predicate_groups']}")
+        # logger.debug("---")
         subjects.append(subject_data)
     
     # Sort subjects: main subject first, then blank nodes, then others
@@ -262,16 +261,16 @@ def resolve_uri(uri):
     for subject in subjects:
         if subject['subject'] == id_uri:
             main_subject = subject
-            logger.debug(f"Found main subject: {id_uri}")
+            # logger.debug(f"Found main subject: {id_uri}")
         elif subject['subject'].startswith('_:'):
             blank_nodes.append(subject)
-            logger.debug(f"Found blank node: {subject['subject']}")
+            # logger.debug(f"Found blank node: {subject['subject']}")
         else:
             other_subjects.append(subject)
-            logger.debug(f"Found other subject: {subject['subject']}")
+            # logger.debug(f"Found other subject: {subject['subject']}")
     
-    logger.debug(f"Total subjects: {len(subjects)}")
-    logger.debug(f"Blank nodes found: {len(blank_nodes)}")
+    # logger.debug(f"Total subjects: {len(subjects)}")
+    # logger.debug(f"Blank nodes found: {len(blank_nodes)}")
     
     # Combine in correct order
     sorted_subjects = []
