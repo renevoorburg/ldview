@@ -269,7 +269,7 @@ def resolve_uri(uri):
             logger.debug("  -> This is other subject")
             if subject['is_blank']:
                 blank_nodes.append(subject)
-            else:
+            elif subject['subject'] == uri:  # Alleen de opgevraagde URI toevoegen
                 other_subjects.append(subject)
     
     # Combine in correct order
