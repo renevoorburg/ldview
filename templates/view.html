@@ -83,7 +83,7 @@
                         {% set has_blank_nodes = true %}
                     {% endif %}
                     <div class="blank-node" id="{{ subject.subject }}">
-                        <h3>{{ subject.subject }}</h3>
+                        <h3>{{ subject.subject }}{% if subject.relation_to_main %} ({{ subject.relation_to_main }}){% endif %}</h3>
                         {% set ns = namespace(last_predicate=None) %}
                         <table class="properties-table">
                             <tbody>

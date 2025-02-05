@@ -1,6 +1,10 @@
 # SPARQL endpoint configuratie
 SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 
+# SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
+
+KNOWN_URI_PATTERNS = [ 'https://data.digitopia.nl/' ]
+
 
 # Namespace configuratie
 NAMESPACES = {
@@ -106,6 +110,11 @@ PREDICATE_GROUPS = [
         'http://www.w3.org/2004/02/skos/core#exactMatch'
     ]   
 ]
+
+# RDF source configuration
+RDF_SOURCE_TYPE = 'turtlefiles'  # Options: 'sparql', 'turtlefiles'
+TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
+TURTLE_FILES_BASE_URI = 'https://data.digitopia.nl/id/'  # Base URI for Turtle files
 
 # HTTP status codes
 REDIRECT_STATUS_CODE = 303  # See Other
