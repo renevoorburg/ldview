@@ -333,3 +333,11 @@ h2 {
 .predicate .local {
     color: #333;
 }
+
+.map-container {
+    width: 400px;
+    height: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+}

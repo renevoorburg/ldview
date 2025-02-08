@@ -74,6 +74,18 @@ IMAGE_PREDICATES = {
     'http://schema.org/image'
 }
 
+# Coordinate predicates
+COORDINATE_PREDICATES = {
+    'latitude': [
+        'http://www.w3.org/2003/01/geo/wgs84_pos#lat',
+        'http://schema.org/latitude'
+    ],
+    'longitude': [
+        'http://www.w3.org/2003/01/geo/wgs84_pos#long',
+        'http://schema.org/longitude'
+    ]
+}
+
 # Predicaat groepen voor geordende weergave
 PREDICATE_GROUPS = [
     [
@@ -125,5 +137,3 @@ PREDICATE_GROUPS = [
         'http://www.w3.org/2004/02/skos/core#exactMatch'
     ]   
 ]
-
-

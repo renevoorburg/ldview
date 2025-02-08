@@ -30,15 +30,27 @@
                         {% endif %}
                     </div>
 
-                    {% if main_subject.images %}
+                    {% if main_subject.images or main_subject.coordinates %}
                         <div class="images-section">
-                            {% for image in main_subject.images %}
-                                <div class="image-container" title="{{ image.predicate_short.prefix }}{{ image.predicate_short.local }}">
-                                    <a href="{{ image.url }}" target="_blank">
-                                        <img src="{{ image.url }}" alt="{{ main_subject.main_label or main_subject.subject_short }}">
-                                    </a>
-                                </div>
-                            {% endfor %}
+                            {% if main_subject.images %}
+                                {% for image in main_subject.images %}
+                                    <div class="image-container" title="{{ image.predicate_short.prefix }}{{ image.predicate_short.local }}">
+                                        <a href="{{ image.url }}" target="_blank">
+                                            <img src="{{ image.url }}" alt="{{ main_subject.main_label or main_subject.subject_short }}">
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            {% if main_subject.coordinates %}
+                                <div id="map" class="map-container"></div>
+                                <script>
+                                    var map = L.map('map').setView([{{ main_subject.coordinates.latitude }}, {{ main_subject.coordinates.longitude }}], 13);
+                                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    }).addTo(map);
+                                    L.marker([{{ main_subject.coordinates.latitude }}, {{ main_subject.coordinates.longitude }}]).addTo(map);
+                                </script>
+                            {% endif %}
                         </div>
                     {% endif %}
 

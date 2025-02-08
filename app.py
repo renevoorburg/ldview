@@ -90,7 +90,7 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
     main_label = None  # Single label for the header
     main_description_predicate = None  # Track the first matching description predicate
     main_descriptions = []  # Collect all values for the first matching description predicate
-    
+    coordinates = {'latitude': None, 'longitude': None}  # Store coordinates if found
     is_blank = subject_uri.startswith('_:') or subject_uri.startswith('n')  # Also check for 'n' prefix
     logger.debug(f"Processing subject: {subject_uri} (blank node: {is_blank})")
 
@@ -158,6 +158,18 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             })
             continue
 
+        # Check if this is a coordinate predicate
+        if predicate in config.COORDINATE_PREDICATES['latitude']:
+            try:
+                coordinates['latitude'] = float(obj)
+            except ValueError:
+                logger.warning(f"Invalid latitude value: {obj}")
+        elif predicate in config.COORDINATE_PREDICATES['longitude']:
+            try:
+                coordinates['longitude'] = float(obj)
+            except ValueError:
+                logger.warning(f"Invalid longitude value: {obj}")
+
         # For main subject, check for the first label if we haven't found one yet
         if is_main_subject and main_label is None and predicate in config.LABEL_PREDICATES:
             main_label = obj
@@ -203,7 +215,8 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         'is_blank': is_blank,
         'images': images if is_main_subject else [],  # Only include images for main subject
         'relation_to_main': relation_to_main,  # Add relation to main subject for linked subjects
-        'relation_uri': relation_uri
+        'relation_uri': relation_uri,
+        'coordinates': coordinates if coordinates['latitude'] is not None and coordinates['longitude'] is not None else None
     }
 
 @app.route('/<path:uri>')
