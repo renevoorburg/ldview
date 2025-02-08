@@ -52,8 +52,17 @@
                                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                     }).addTo(map);
 
-                                    coordinates.forEach(function(coord) {
-                                        L.marker([coord.latitude, coord.longitude]).addTo(map);
+                                    coordinates.forEach(function(coord, index) {
+                                        // Create marker with popup
+                                        var marker = L.marker([coord.latitude, coord.longitude])
+                                            .bindPopup(
+                                                '<div class="marker-popup">' +
+                                                (coord.label || 'Locatie ' + (index + 1)) +
+                                                '</div>'
+                                            );
+                                        
+                                        // Add to map
+                                        marker.addTo(map);
                                         bounds.extend([coord.latitude, coord.longitude]);
                                     });
 

@@ -91,6 +91,15 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
     main_description_predicate = None  # Track the first matching description predicate
     main_descriptions = []  # Collect all values for the first matching description predicate
     coordinates_list = []  # Store list of coordinate pairs
+    current_coordinates = {'latitude': None, 'longitude': None}  # Store coordinates for current subject
+
+    def find_label(node):
+        """Helper function to find the first matching label for a node"""
+        for label_predicate in config.LABEL_PREDICATES:
+            for s, p, o in graph.triples((node, URIRef(label_predicate), None)):
+                return str(o)
+        return None
+
     is_blank = subject_uri.startswith('_:') or subject_uri.startswith('n')  # Also check for 'n' prefix
     logger.debug(f"Processing subject: {subject_uri} (blank node: {is_blank})")
 
@@ -104,7 +113,7 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
     else:
         subject_node = URIRef(subject_uri)
         logger.debug(f"Using URIRef for URI: {subject_node}")
-    
+
     # First collect types
     type_count = 0
     for s, p, o in graph.triples((subject_node, RDF.type, None)):
@@ -112,8 +121,11 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         types.append(shorten_uri(type_uri))  # Now returns dict with prefix and local
         type_count += 1
         logger.debug(f"Found type for {subject_uri}: {type_uri}")
-    
-    logger.debug(f"Found {type_count} types for subject {subject_uri}")
+
+    # First find the main label if this is the main subject
+    if is_main_subject:
+        main_label = find_label(subject_node)
+        logger.debug(f"Found main label for {subject_uri}: {main_label}")
 
     # Initialize blank_node_relations to ensure it's available for blank nodes
     blank_node_relations = {}
@@ -159,7 +171,6 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             continue
 
         # Check if this is a coordinate predicate
-        current_coordinates = {'latitude': None, 'longitude': None}
         if predicate in config.COORDINATE_PREDICATES['latitude']:
             try:
                 current_coordinates['latitude'] = float(obj)
@@ -173,7 +184,10 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
 
         # If we have a complete coordinate pair, add it to the list
         if current_coordinates['latitude'] is not None and current_coordinates['longitude'] is not None:
-            coordinates_list.append(current_coordinates)
+            if is_main_subject:
+                current_coordinates['label'] = main_label
+            coordinates_list.append(current_coordinates.copy())  # Make a copy to avoid reference issues
+            current_coordinates = {'latitude': None, 'longitude': None}  # Reset for next pair
 
         # For blank nodes, check if they contain coordinates
         if obj.startswith('_:') or obj.startswith('n'):
@@ -195,6 +209,9 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             
             # If both coordinates are found in the blank node, add them to the list
             if blank_coordinates['latitude'] is not None and blank_coordinates['longitude'] is not None:
+                # Find label for this blank node
+                label = find_label(blank_node)
+                blank_coordinates['label'] = label
                 coordinates_list.append(blank_coordinates)
 
         # For main subject, check for the first label if we haven't found one yet
@@ -220,11 +237,6 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             'object_short': shorten_uri(obj),
             'is_blank_object': obj.startswith('_:') or obj.startswith('n')
         })
-        pred_count = 0
-        pred_count += 1
-        logger.debug(f"Added predicate for {subject_uri}: {predicate} -> {obj}")
-
-    logger.debug(f"Found {pred_count} predicates for subject {subject_uri}")
 
     # Group predicates according to configuration
     predicate_groups = group_predicates(predicates)
@@ -238,10 +250,10 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         'types': types,
         'main_label': main_label if is_main_subject else None,
         'main_description': main_description if is_main_subject else None,
+        'images': images if is_main_subject else [],  # Only include images for main subject
         'predicate_groups': predicate_groups,
         'is_blank': is_blank,
-        'images': images if is_main_subject else [],  # Only include images for main subject
-        'relation_to_main': relation_to_main,  # Add relation to main subject for linked subjects
+        'relation_to_main': relation_to_main,
         'relation_uri': relation_uri,
         'coordinates_list': coordinates_list if coordinates_list else None
     }

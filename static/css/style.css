@@ -341,3 +341,22 @@ h2 {
     border-radius: 4px;
     overflow: hidden;
 }
+
+.marker-popup {
+    padding: 3px 6px;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.marker-popup h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1em;
+    color: #2c3e50;
+}
+
+.marker-popup p {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.4;
+    color: #666;
+}
