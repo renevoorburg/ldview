@@ -134,6 +134,9 @@ PREDICATE_GROUPS = [
     ],
     [
         'http://www.w3.org/2002/07/owl#sameAs',
-        'http://www.w3.org/2004/02/skos/core#exactMatch'
+        'http://www.w3.org/2004/02/skos/core#exactMatch',
+        'http://schema.org/sameAs',
+        'http://schema.org/mainEntityOfPage',
+        'http://www.w3.org/2000/01/rdf-schema#seeAlso'
     ]   
 ]
