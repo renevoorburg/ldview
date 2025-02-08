@@ -90,7 +90,7 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
     main_label = None  # Single label for the header
     main_description_predicate = None  # Track the first matching description predicate
     main_descriptions = []  # Collect all values for the first matching description predicate
-    coordinates = {'latitude': None, 'longitude': None}  # Store coordinates if found
+    coordinates_list = []  # Store list of coordinate pairs
     is_blank = subject_uri.startswith('_:') or subject_uri.startswith('n')  # Also check for 'n' prefix
     logger.debug(f"Processing subject: {subject_uri} (blank node: {is_blank})")
 
@@ -159,16 +159,43 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             continue
 
         # Check if this is a coordinate predicate
+        current_coordinates = {'latitude': None, 'longitude': None}
         if predicate in config.COORDINATE_PREDICATES['latitude']:
             try:
-                coordinates['latitude'] = float(obj)
+                current_coordinates['latitude'] = float(obj)
             except ValueError:
                 logger.warning(f"Invalid latitude value: {obj}")
         elif predicate in config.COORDINATE_PREDICATES['longitude']:
             try:
-                coordinates['longitude'] = float(obj)
+                current_coordinates['longitude'] = float(obj)
             except ValueError:
                 logger.warning(f"Invalid longitude value: {obj}")
+
+        # If we have a complete coordinate pair, add it to the list
+        if current_coordinates['latitude'] is not None and current_coordinates['longitude'] is not None:
+            coordinates_list.append(current_coordinates)
+
+        # For blank nodes, check if they contain coordinates
+        if obj.startswith('_:') or obj.startswith('n'):
+            blank_node = BNode(obj[2:]) if obj.startswith('_:') else BNode(obj)
+            blank_coordinates = {'latitude': None, 'longitude': None}
+            
+            # Search for coordinates in the blank node
+            for s, p, o in graph.triples((blank_node, None, None)):
+                if str(p) in config.COORDINATE_PREDICATES['latitude']:
+                    try:
+                        blank_coordinates['latitude'] = float(o)
+                    except ValueError:
+                        logger.warning(f"Invalid latitude value in blank node: {o}")
+                elif str(p) in config.COORDINATE_PREDICATES['longitude']:
+                    try:
+                        blank_coordinates['longitude'] = float(o)
+                    except ValueError:
+                        logger.warning(f"Invalid longitude value in blank node: {o}")
+            
+            # If both coordinates are found in the blank node, add them to the list
+            if blank_coordinates['latitude'] is not None and blank_coordinates['longitude'] is not None:
+                coordinates_list.append(blank_coordinates)
 
         # For main subject, check for the first label if we haven't found one yet
         if is_main_subject and main_label is None and predicate in config.LABEL_PREDICATES:
@@ -216,7 +243,7 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         'images': images if is_main_subject else [],  # Only include images for main subject
         'relation_to_main': relation_to_main,  # Add relation to main subject for linked subjects
         'relation_uri': relation_uri,
-        'coordinates': coordinates if coordinates['latitude'] is not None and coordinates['longitude'] is not None else None
+        'coordinates_list': coordinates_list if coordinates_list else None
     }
 
 @app.route('/<path:uri>')
