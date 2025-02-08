@@ -1,16 +1,32 @@
-# SPARQL endpoint configuratie
-SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
+# Viewing model:
+SEMANTIC_REDIRECTS = False
 
+# Semantic redirects setup:
+REDIRECT_STATUS_CODE = 303  # See Other
+URI_PATTERNS = {
+    'id': '/id/',     # Pattern voor identificatie URIs
+    'doc': '/doc/'    # Pattern voor document URIs
+}
+
+# Source configuration
+RDF_SOURCE_TYPE = 'turtlefiles'  # Options: 'sparql', 'turtlefiles'
+
+# Turtle files source configuration
+TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
+TURTLE_FILES_BASE_URI = 'https://data.digitopia.nl/'  # Base URI for Turtle files
+
+
+# SPARQL endpoint source configuration
+SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 # SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
+
 
 KNOWN_URI_PATTERNS = [ 
     'https://data.digitopia.nl/',
-    'https://data.digitopia.nl/doc/',
-    'https://data.digitopia.nl/id/'
 ]
 
 
-# Namespace configuratie
+# Namespace configuration
 NAMESPACES = {
     'rdanl': 'http://data.bibliotheken.nl/rdanl#',
     'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -31,11 +47,6 @@ SUPPORTED_FORMATS = {
     'application/ld+json': 'json-ld'
 }
 
-# URI pattern configuratie
-URI_PATTERNS = {
-    'id': '/id/',     # Pattern voor identificatie URIs
-    'doc': '/doc/'    # Pattern voor document URIs
-}
 
 # Predicaat configuratie voor weergave
 LABEL_PREDICATES = [
@@ -115,10 +126,4 @@ PREDICATE_GROUPS = [
     ]   
 ]
 
-# RDF source configuration
-RDF_SOURCE_TYPE = 'turtlefiles'  # Options: 'sparql', 'turtlefiles'
-TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
-TURTLE_FILES_BASE_URI = 'https://data.digitopia.nl/id/'  # Base URI for Turtle files
 
-# HTTP status codes
-REDIRECT_STATUS_CODE = 303  # See Other

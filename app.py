@@ -216,11 +216,15 @@ def resolve_uri(uri):
             message="404 - URI not found",
             uri=uri), 404
 
-    if is_identity_uri(uri):
+    if config.SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
         return redirect(page_uri_to_identity_uri(uri))
 
-    page_uri = uri
-    id_uri = page_uri_to_identity_uri(uri)
+    if config.SEMANTIC_REDIRECTS is True:
+        page_uri = uri
+        id_uri = page_uri_to_identity_uri(uri)
+    else:
+        page_uri = uri
+        id_uri = uri
     
     try:
         rdf_graph = rdf_source.get_rdf_for_uri(id_uri, page_uri)
