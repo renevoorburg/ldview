@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from rdflib import Graph
 import logging
-from SPARQLWrapper import SPARQLWrapper
+from SPARQLWrapper import SPARQLWrapper, JSON
 import config
 
 logger = logging.getLogger(__name__)
@@ -53,3 +53,17 @@ class RDFSource(ABC):
         except Exception as e:
             logger.error(f"Error executing SPARQL query for datasets: {str(e)}")
             return None
+
+    def query(self, sparql_query: str):
+        """Execute a SPARQL query and return the results"""
+        try:
+            sparql = SPARQLWrapper(config.SPARQL_ENDPOINT)
+            sparql.setQuery(sparql_query)
+            sparql.setReturnFormat(JSON)
+            results = sparql.query().convert()
+            if isinstance(results, dict) and 'results' in results and 'bindings' in results['results']:
+                return results['results']['bindings']
+            return []
+        except Exception as e:
+            logger.error(f"Error executing SPARQL query: {str(e)}")
+            return []

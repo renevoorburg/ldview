@@ -219,6 +219,19 @@
                 </div>
             {% endif %}
 
+            {% if inverse_predicates %}
+                <h2>Referenced By (via)</h2>
+                <ul class="inverse-predicates">
+                {% for pred in inverse_predicates %}
+                    <li>
+                        <a href="{{ pred.yasgui_link }}" title="View all resources using this predicate in YASGUI">
+                            {{ pred.short.local }}
+                        </a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+
             <div class="formats">
                 <h3>Available Formats:</h3>
                 <ul>

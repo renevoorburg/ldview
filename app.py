@@ -1,17 +1,20 @@
+import logging
 from flask import Flask, request, render_template, Response, abort, redirect, url_for
 from rdflib import Graph, URIRef, ConjunctiveGraph, RDF, BNode
 from SPARQLWrapper import SPARQLWrapper, JSON
 import config
-import logging
 import json
-from urllib.parse import urlparse, urlunparse
 from collections import defaultdict
+from urllib.parse import urlparse, urlunparse, quote
 import sys
 from uri_utils import transform_uri, is_identity_uri, get_sparql_uri, shorten_uri, page_uri_to_identity_uri, matches_known_uri_patterns
 from sparql_utils import SPARQLEndpoint
 from turtle_files import TurtleFiles
 from rdf_source import ResourceNotFound
 from content_negotiation import ContentNegotiator
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -413,6 +416,69 @@ def resolve_uri(uri):
             uri=uri,
             config=config), 500
 
+    # Get inverse relations if using SPARQL
+    inverse_predicates = []
+    logger = logging.getLogger(__name__)
+    logger.debug(f"RDF data source type: {config.RDF_DATA_SOURCE_TYPE}")
+    if config.RDF_DATA_SOURCE_TYPE == 'sparql' and rdf_graph:
+        try:
+            sparql_query = f"""
+                SELECT DISTINCT ?p WHERE {{
+                    ?s ?p <{uri}> .
+                    FILTER(!isBlank(?s))
+                }}
+            """
+            logger.debug(f"Executing inverse relations query: {sparql_query}")
+            inverse_results = rdf_source.query(sparql_query)
+            logger.debug(f"Inverse relations results: {inverse_results}")
+            
+            # Create YASGUI query template with proper prefixes
+            yasgui_query_template = """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?s ?label WHERE {
+    ?s ?p <%s> .
+    OPTIONAL { ?s rdfs:label ?label }
+    FILTER(!isBlank(?s))
+}"""
+            
+            seen_predicates = set()
+            for row in inverse_results:
+                predicate_uri = row['p']['value']
+                if predicate_uri not in seen_predicates:
+                    seen_predicates.add(predicate_uri)
+                    # Create specific query for this predicate
+                    this_query = yasgui_query_template % uri
+                    this_query = this_query.replace("?p", f"<{predicate_uri}>")
+                    
+                    # Create full YASGUI URL with all parameters
+                    yasgui_params = {
+                        'query': this_query,
+                        'endpoint': config.SPARQL_ENDPOINT,
+                        'requestMethod': 'POST',
+                        'tabTitle': 'Query',
+                        'headers': '{}',
+                        'contentTypeConstruct': 'application/n-triples,*/*;q=0.9',
+                        'contentTypeSelect': 'application/sparql-results+json,*/*;q=0.9',
+                        'outputFormat': 'table',
+                        'outputSettings': '{"compact":true,"isEllipsed":false}'
+                    }
+                    
+                    # Build the URL: BASE_URI + YASGUI_PAGE + #query=... + other params
+                    yasgui_base = config.BASE_URI.rstrip('/') + '/' + config.YASGUI_PAGE.strip('/')
+                    yasgui_url = yasgui_base.replace('/yasgui/', '/yasgui') + '#'
+                    param_strings = []
+                    for key, value in yasgui_params.items():
+                        param_strings.append(f"{key}={quote(value)}")
+                    yasgui_url += '&'.join(param_strings)
+                    
+                    inverse_predicates.append({
+                        'uri': predicate_uri,
+                        'short': shorten_uri(predicate_uri),
+                        'yasgui_link': yasgui_url
+                    })
+            logger.debug(f"Final inverse predicates: {inverse_predicates}")
+        except Exception as e:
+            logger.error(f"Error getting inverse relations: {str(e)}")
+
     # Handle content negotiation
     response = ContentNegotiator.get_response(
         rdf_graph,
@@ -463,7 +529,8 @@ def resolve_uri(uri):
         query_uri=id_uri,
         query_uri_short=shorten_uri(id_uri),
         subjects=sorted_subjects,
-        blank_nodes=blank_nodes)
+        blank_nodes=blank_nodes,
+        inverse_predicates=inverse_predicates)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
