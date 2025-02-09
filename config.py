@@ -21,9 +21,6 @@ TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
 SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 # SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 
-# YASGUI configuration (only used when RDF_DATA_SOURCE_TYPE is 'sparql')
-YASGUI_PAGE = 'yasgui'  # Will be accessible at {BASE_URI}{YASGUI_PAGE}
-
 # Content negotiation settings
 SUPPORTED_OUTPUT_FORMATS = {
     'text/html': 'html',
@@ -163,3 +160,9 @@ OPTIONAL {
   }  
 }
 """
+
+# YASGUI configuration (only used when RDF_DATA_SOURCE_TYPE is 'sparql')
+YASGUI_PAGE = 'yasgui'  # Will be accessible at {BASE_URI}{YASGUI_PAGE}
+
+# Display configuration
+MAX_INVERSE_SUBJECTS = 1  # Maximum number of subjects to show for inverse relations

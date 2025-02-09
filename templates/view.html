@@ -219,16 +219,25 @@
                 </div>
             {% endif %}
 
-            {% if inverse_predicates %}
-                <h2>Referenced By (via)</h2>
-                <ul class="inverse-predicates">
-                {% for pred in inverse_predicates %}
+            {% if inverse_relations %}
+                <h3>Inverse Relations</h3>
+                <ul class="inverse-relations">
+                    {% for pred, data in inverse_relations.items() %}
                     <li>
-                        <a href="{{ pred.yasgui_link }}" title="View all resources using this predicate in YASGUI">
-                            {{ pred.short.local }}
-                        </a>
+                        <strong>{{ shorten_uri(pred).local }}</strong>
+                        <ul class="subjects-list">
+                            {% for subject in data.subjects %}
+                            <li><a href="{{ subject.uri }}">{{ subject.label }}</a></li>
+                            {% endfor %}
+                            {% if data.total_count > config.MAX_INVERSE_SUBJECTS %}
+                            <li class="more-results">
+                                <em>... and {{ data.total_count - config.MAX_INVERSE_SUBJECTS }} more results</em>
+                                <a href="{{ data.yasgui_url }}" target="_blank">(view all in YASGUI)</a>
+                            </li>
+                            {% endif %}
+                        </ul>
                     </li>
-                {% endfor %}
+                    {% endfor %}
                 </ul>
             {% endif %}
 

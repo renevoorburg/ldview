@@ -417,67 +417,93 @@ def resolve_uri(uri):
             config=config), 500
 
     # Get inverse relations if using SPARQL
-    inverse_predicates = []
+    inverse_relations = {}
     logger = logging.getLogger(__name__)
     logger.debug(f"RDF data source type: {config.RDF_DATA_SOURCE_TYPE}")
     if config.RDF_DATA_SOURCE_TYPE == 'sparql' and rdf_graph:
         try:
-            sparql_query = f"""
-                SELECT DISTINCT ?p WHERE {{
+            # Query for inverse relations
+            inverse_query = f"""
+                SELECT DISTINCT ?p ?s ?label WHERE {{
                     ?s ?p <{uri}> .
-                    FILTER(!isBlank(?s))
-                }}
+                    OPTIONAL {{ ?s rdfs:label ?label }}
+                }} 
+                ORDER BY ?p ?s
             """
-            logger.debug(f"Executing inverse relations query: {sparql_query}")
-            inverse_results = rdf_source.query(sparql_query)
-            logger.debug(f"Inverse relations results: {inverse_results}")
+            inverse_results = rdf_source.query(inverse_query)
             
-            # Create YASGUI query template with proper prefixes
-            yasgui_query_template = """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?s ?label WHERE {
-    ?s ?p <%s> .
-    OPTIONAL { ?s rdfs:label ?label }
-    FILTER(!isBlank(?s))
-}"""
+            # Group results by predicate
+            inverse_relations = {}
+            for result in inverse_results:
+                pred = result['p']['value']
+                subj = result['s']['value']
+                label = result.get('label', {}).get('value', '')
+                
+                if pred not in inverse_relations:
+                    inverse_relations[pred] = []
+                
+                if len(inverse_relations[pred]) < config.MAX_INVERSE_SUBJECTS:
+                    inverse_relations[pred].append({
+                        'uri': subj,
+                        'label': label or subj.split('/')[-1]
+                    })
             
-            seen_predicates = set()
-            for row in inverse_results:
-                predicate_uri = row['p']['value']
-                if predicate_uri not in seen_predicates:
-                    seen_predicates.add(predicate_uri)
-                    # Create specific query for this predicate
-                    this_query = yasgui_query_template % uri
-                    this_query = this_query.replace("?p", f"<{predicate_uri}>")
-                    
-                    # Create full YASGUI URL with all parameters
-                    yasgui_params = {
-                        'query': this_query,
-                        'endpoint': config.SPARQL_ENDPOINT,
-                        'requestMethod': 'POST',
-                        'tabTitle': 'Query',
-                        'headers': '{}',
-                        'contentTypeConstruct': 'application/n-triples,*/*;q=0.9',
-                        'contentTypeSelect': 'application/sparql-results+json,*/*;q=0.9',
-                        'outputFormat': 'table',
-                        'outputSettings': '{"compact":true,"isEllipsed":false}'
-                    }
-                    
+            # Build YASGUI links for predicates with more results
+            for pred in inverse_relations:
+                # Count total results for this predicate
+                count_query = f"""
+                    SELECT (COUNT(DISTINCT ?s) as ?count) WHERE {{
+                        ?s <{pred}> <{uri}> .
+                    }}
+                """
+                count_results = rdf_source.query(count_query)
+                total_count = int(count_results[0]['count']['value']) if count_results else 0
+                
+                # Build YASGUI URL if we have more results than shown
+                if total_count > config.MAX_INVERSE_SUBJECTS:
                     # Build the URL: BASE_URI + YASGUI_PAGE + #query=... + other params
                     yasgui_base = config.BASE_URI.rstrip('/') + '/' + config.YASGUI_PAGE.strip('/')
                     yasgui_url = yasgui_base.replace('/yasgui/', '/yasgui') + '#'
+                    
+                    # Build YASGUI query
+                    yasgui_query = f"""
+                        SELECT ?s ?label WHERE {{
+                            ?s <{pred}> <{uri}> .
+                            OPTIONAL {{ ?s rdfs:label ?label }}
+                        }}
+                        ORDER BY ?s
+                    """
+                    
+                    yasgui_params = {
+                        'query': yasgui_query,
+                        'endpoint': config.SPARQL_ENDPOINT,
+                        'requestMethod': 'POST',
+                        'tabTitle': f'Inverse relations for {uri}',
+                        'headers': '{}'
+                    }
+                    
                     param_strings = []
                     for key, value in yasgui_params.items():
                         param_strings.append(f"{key}={quote(value)}")
                     yasgui_url += '&'.join(param_strings)
                     
-                    inverse_predicates.append({
-                        'uri': predicate_uri,
-                        'short': shorten_uri(predicate_uri),
-                        'yasgui_link': yasgui_url
-                    })
-            logger.debug(f"Final inverse predicates: {inverse_predicates}")
+                    # Add URL to the results
+                    inverse_relations[pred] = {
+                        'subjects': inverse_relations[pred],
+                        'total_count': total_count,
+                        'yasgui_url': yasgui_url
+                    }
+                else:
+                    # Just wrap the subjects in a dict for consistent structure
+                    inverse_relations[pred] = {
+                        'subjects': inverse_relations[pred],
+                        'total_count': total_count
+                    }
+            
+            logger.debug(f"Final inverse relations: {inverse_relations}")
         except Exception as e:
             logger.error(f"Error getting inverse relations: {str(e)}")
+            inverse_relations = {}
 
     # Handle content negotiation
     response = ContentNegotiator.get_response(
@@ -523,14 +549,17 @@ SELECT ?s ?label WHERE {
     sorted_subjects.extend(sorted(other_subjects, key=lambda x: x['subject']))
     sorted_subjects.extend(blank_nodes)
 
-    return render_template('view.html',
+    return render_template(
+        'view.html',
+        subjects=sorted_subjects,
+        inverse_relations=inverse_relations,
         config=config,
+        shorten_uri=shorten_uri,
         uri=uri,
         query_uri=id_uri,
         query_uri_short=shorten_uri(id_uri),
-        subjects=sorted_subjects,
-        blank_nodes=blank_nodes,
-        inverse_predicates=inverse_predicates)
+        blank_nodes=blank_nodes
+    )
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
