@@ -285,7 +285,8 @@ def resolve_uri(uri):
             if not rdf_graph:
                 return render_template('error.html',
                     message="No data found for homepage",
-                    uri='/'), 404
+                    uri='/',
+                    config=config), 404
 
             # Handle content negotiation for homepage
             response = ContentNegotiator.get_response(
@@ -329,24 +330,26 @@ def resolve_uri(uri):
             sorted_subjects.extend(blank_nodes)
 
             return render_template('view.html',
+                config=config,
                 uri='/',
                 query_uri=uri,
                 query_uri_short=shorten_uri(uri),
                 subjects=sorted_subjects,
-                blank_nodes=blank_nodes
-            )
+                blank_nodes=blank_nodes)
 
         except Exception as e:
             logger.error(f"Error retrieving datasets: {str(e)}")
             return render_template('error.html',
                 message=f"500 - Internal server error: {str(e)}",
-                uri='/'), 500
+                uri='/',
+                config=config), 500
 
     # Regular URI handling
     if not matches_known_uri_patterns(uri):
         return render_template('error.html', 
             message="404 - URI not found",
-            uri=uri), 404
+            uri=uri,
+            config=config), 404
 
     if config.USE_SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
         return redirect(page_uri_to_identity_uri(uri), 303)  # HTTP 303 See Other
@@ -363,12 +366,14 @@ def resolve_uri(uri):
     except ResourceNotFound as e:
         return render_template('error.html', 
             message=f"404 - Resource not found: {str(e)}",
-            uri=uri), 404
+            uri=uri,
+            config=config), 404
     except Exception as e:
         logger.error(f"Error retrieving RDF data: {str(e)}")
         return render_template('error.html',
             message=f"500 - Internal server error: {str(e)}",
-            uri=uri), 500
+            uri=uri,
+            config=config), 500
 
     # Handle content negotiation
     response = ContentNegotiator.get_response(
@@ -415,17 +420,17 @@ def resolve_uri(uri):
     sorted_subjects.extend(blank_nodes)
 
     return render_template('view.html',
+        config=config,
         uri=uri,
         query_uri=id_uri,
         query_uri_short=shorten_uri(id_uri),
         subjects=sorted_subjects,
-        blank_nodes=blank_nodes
-    )
+        blank_nodes=blank_nodes)
 
 @app.errorhandler(500)
 def internal_error(error):
     if request.accept_mimetypes.best_match(['text/html']):
-        return render_template('error.html', error=error), 500
+        return render_template('error.html', error=error, config=config), 500
     return str(error), 500
 
 if __name__ == '__main__':

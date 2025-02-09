@@ -45,13 +45,15 @@
                                 <div id="map" class="map-container"></div>
                                 <script>
                                     var coordinates = {{ main_subject.coordinates_list|tojson }};
-                                    var bounds = L.latLngBounds();
-                                    
                                     var map = L.map('map');
+                                    
+                                    // Add tile layer
                                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                     }).addTo(map);
 
+                                    // Add markers and create bounds
+                                    var bounds = L.latLngBounds();
                                     coordinates.forEach(function(coord, index) {
                                         // Create marker with popup
                                         var marker = L.marker([coord.latitude, coord.longitude])
@@ -66,8 +68,12 @@
                                         bounds.extend([coord.latitude, coord.longitude]);
                                     });
 
-                                    // Fit the map to show all markers with more padding
-                                    map.fitBounds(bounds, {padding: [50, 50]});
+                                    // Set view based on points
+                                    if (coordinates.length === 1) {
+                                        map.setView([coordinates[0].latitude, coordinates[0].longitude], {{ config.DEFAULT_MAP_ZOOM_LEVEL }});
+                                    } else {
+                                        map.fitBounds(bounds, {padding: [50, 50]});
+                                    }
                                 </script>
                             {% endif %}
                         </div>

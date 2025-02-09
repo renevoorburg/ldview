@@ -12,7 +12,7 @@ SEMANTIC_REDIRECT_URI_SEGMENTS = {
 }
 
 # Date source configuration
-RDF_DATA_SOURCE_TYPE = 'sparql'  # Options: 'sparql', 'turtlefiles'
+RDF_DATA_SOURCE_TYPE = 'turtlefiles'  # Options: 'sparql', 'turtlefiles'
 
 # turtlefiles -> source configuration:
 TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
@@ -134,6 +134,9 @@ PREDICATE_GROUPS = [
         'http://www.w3.org/2000/01/rdf-schema#seeAlso'
     ]   
 ]
+
+# Map configuration
+DEFAULT_MAP_ZOOM_LEVEL = 10  # Default zoom level for single point on map
 
 # Homepage configuration
 HOME_PAGE_TURTLEFILE = 'index.ttl'  # Turtle file to use for homepage in turtlefiles mode
