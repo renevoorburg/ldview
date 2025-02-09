@@ -275,14 +275,16 @@ def resolve_uri(uri):
     # Check if this is the homepage (base URI)
     if normalized_uri == base_uri:
         try:
-            if config.RDF_SOURCE_TYPE != 'sparql':
-                return render_template('index.html')
-
-            # Get datasets for homepage
-            rdf_graph = rdf_source.get_sparql_datasets()
+            # Get homepage data based on source type
+            if config.RDF_SOURCE_TYPE == 'sparql':
+                rdf_graph = rdf_source.get_sparql_datasets()
+            else:
+                # Use configured turtle file for homepage in turtle mode
+                rdf_graph = rdf_source.get_rdf_for_uri(config.HOME_PAGE_TURTLEFILE)
+                    
             if not rdf_graph:
                 return render_template('error.html',
-                    message="No datasets found",
+                    message="No data found for homepage",
                     uri='/'), 404
 
             # Handle content negotiation for homepage

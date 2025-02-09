@@ -1,6 +1,7 @@
 from rdflib import Graph
-import logging
 import os
+import logging
+import config
 from urllib.parse import urlparse
 from rdf_source import RDFSource, ResourceNotFound
 
@@ -55,6 +56,17 @@ class TurtleFiles(RDFSource):
             ResourceNotFound: If the Turtle file does not exist or contains no data
         """
         try:
+            # Special case for homepage
+            if id_uri == config.HOME_PAGE_TURTLEFILE:
+                file_path = os.path.join(self.base_directory, id_uri)
+                if not os.path.exists(file_path):
+                    raise ResourceNotFound(f"No Turtle file found for homepage: {id_uri}")
+                
+                graph = Graph()
+                graph.parse(file_path, format='turtle')
+                return graph
+
+            # Regular URI handling
             file_path = self._uri_to_file_path(id_uri)
             logger.debug(f"Looking for Turtle file at: {file_path}")
             

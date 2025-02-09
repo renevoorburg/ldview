@@ -135,7 +135,10 @@ PREDICATE_GROUPS = [
     ]   
 ]
 
-# SPARQL query homepage (datasets):
+# Homepage configuration
+HOME_PAGE_TURTLEFILE = 'index.ttl'  # Turtle file to use for homepage in turtlefiles mode
+
+# Homepage SPARQL query (for sparql mode)
 HOME_PAGE_SPARQL_QUERY = """
 PREFIX schema: <http://schema.org/>
 
