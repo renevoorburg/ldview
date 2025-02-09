@@ -345,9 +345,22 @@ def resolve_uri(uri):
             for subject in set(rdf_graph.subjects()):
                 subject_uri = str(subject)
                 if isinstance(subject, BNode):
+                    # Zoek de relatie tussen main subject en blank node
+                    relation_to_main = None
+                    relation_uri = None
+                    for s, p, o in rdf_graph.triples((URIRef(id_uri), None, subject)):
+                        relation_to_main = shorten_uri(str(p))
+                        relation_uri = str(p)
+                        break
+                    
+                    subject_data = process_subject(subject_uri, rdf_graph)
+                    if subject_data:
+                        subject_data['relation_to_main'] = relation_to_main
+                        subject_data['relation_uri'] = relation_uri
+                        blank_nodes.append(subject_data)
                     continue
 
-                subject_data = process_subject(subject_uri, rdf_graph)
+                subject_data = process_subject(subject_uri, rdf_graph, is_main_subject=(subject_uri == id_uri), id_uri=id_uri)
                 if not subject_data:
                     continue
 
@@ -523,8 +536,18 @@ def resolve_uri(uri):
     for subject in set(rdf_graph.subjects()):
         subject_uri = str(subject)
         if isinstance(subject, BNode):
+            # Zoek de relatie tussen main subject en blank node
+            relation_to_main = None
+            relation_uri = None
+            for s, p, o in rdf_graph.triples((URIRef(id_uri), None, subject)):
+                relation_to_main = shorten_uri(str(p))
+                relation_uri = str(p)
+                break
+            
             subject_data = process_subject(subject_uri, rdf_graph)
             if subject_data:
+                subject_data['relation_to_main'] = relation_to_main
+                subject_data['relation_uri'] = relation_uri
                 blank_nodes.append(subject_data)
             continue
 
