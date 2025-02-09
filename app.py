@@ -280,7 +280,12 @@ def internal_error(error):
 @app.route('/<path:uri>')
 def handle_uri(uri):
     """Handle all URIs - both YASGUI and regular URIs"""
-    if uri == 'https://data.digitopia.nl/yasgui':
+    yasgui_url = f"{config.BASE_URI}{config.YASGUI_PAGE}"
+
+    normalized_uri = uri.replace('https://', '').replace('http://', '').strip('/')
+    normalized_yasgui = yasgui_url.replace('https://', '').replace('http://', '').strip('/')
+    
+    if normalized_uri == normalized_yasgui:
         if config.RDF_DATA_SOURCE_TYPE != 'sparql':
             return render_template('error.html',
                 message="YASGUI interface is only available in SPARQL mode",
