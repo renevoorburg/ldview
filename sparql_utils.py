@@ -111,3 +111,30 @@ class SPARQLEndpoint(RDFSource):
                 raise
             logger.error(f"Error querying SPARQL endpoint for URI {id_uri}: {str(e)}")
             raise
+
+    def get_sparql_datasets(self):
+        """Get all datasets using SPARQL CONSTRUCT query"""
+        sparql = SPARQLWrapper(self.endpoint_url)
+        sparql.setTimeout(10)  # Set 10 second timeout
+        sparql.setQuery(config.HOME_PAGE_SPARQL_QUERY)
+        sparql.setReturnFormat('turtle')
+        
+        try:
+            results = sparql.query().convert()
+            
+            # Parse into graph
+            rdf_graph = Graph()
+            if isinstance(results, bytes):
+                rdf_graph.parse(data=results, format='turtle')
+            else:
+                rdf_graph.parse(data=str(results), format='turtle')
+                
+            if len(rdf_graph) == 0:
+                logger.error("SPARQL query returned empty graph")
+                return None
+                
+            return rdf_graph
+            
+        except Exception as e:
+            logger.error(f"Error executing SPARQL query for datasets: {str(e)}")
+            return None

@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, Response, abort, redirect
+from flask import Flask, request, render_template, Response, abort, redirect, url_for
 from rdflib import Graph, URIRef, ConjunctiveGraph, RDF, BNode
 from SPARQLWrapper import SPARQLWrapper, JSON
 import config
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 if config.RDF_SOURCE_TYPE == 'sparql':
     rdf_source = SPARQLEndpoint(config.SPARQL_ENDPOINT)
 elif config.RDF_SOURCE_TYPE == 'turtlefiles':
-    rdf_source = TurtleFiles(config.TURTLE_FILES_DIRECTORY, config.TURTLE_FILES_BASE_URI)
+    rdf_source = TurtleFiles(config.TURTLE_FILES_DIRECTORY, config.BASE_URI)
 else:
     raise ValueError(f"Unknown RDF source type: {config.RDF_SOURCE_TYPE}")
 
@@ -258,20 +258,98 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         'coordinates_list': coordinates_list if coordinates_list else None
     }
 
+@app.route('/')
+def root():
+    """Root URL redirects to base URI"""
+    return resolve_uri(config.BASE_URI.strip('/'))
+
 @app.route('/<path:uri>')
 def resolve_uri(uri):
     """
     Resolve a URI and return its representation
     """
+    # Normalize URI by removing protocol and trailing slash
+    normalized_uri = uri.replace('https://', '').replace('http://', '').strip('/')
+    base_uri = config.BASE_URI.replace('https://', '').replace('http://', '').strip('/')
+    
+    # Check if this is the homepage (base URI)
+    if normalized_uri == base_uri:
+        try:
+            if config.RDF_SOURCE_TYPE != 'sparql':
+                return render_template('index.html')
+
+            # Get datasets for homepage
+            rdf_graph = rdf_source.get_sparql_datasets()
+            if not rdf_graph:
+                return render_template('error.html',
+                    message="No datasets found",
+                    uri='/'), 404
+
+            # Handle content negotiation for homepage
+            response = ContentNegotiator.get_response(
+                rdf_graph,
+                format_param=request.args.get('format'),
+                accept_header=request.headers.get('Accept', 'text/html')
+            )
+            if response:
+                return response
+
+            # Process the graph for HTML view
+            subjects = defaultdict(list)
+            blank_nodes = []
+            main_subject = None
+
+            # Process each subject in the graph
+            for subject in set(rdf_graph.subjects()):
+                subject_uri = str(subject)
+                if isinstance(subject, BNode):
+                    continue
+
+                subject_data = process_subject(subject_uri, rdf_graph)
+                if not subject_data:
+                    continue
+
+                if not main_subject:
+                    main_subject = subject_data
+                else:
+                    subjects[subject_uri].append(subject_data)
+
+            # Convert subjects dict to list
+            other_subjects = []
+            for subject_uri, subject_list in subjects.items():
+                other_subjects.extend(subject_list)
+
+            # Sort subjects
+            sorted_subjects = []
+            if main_subject:
+                sorted_subjects.append(main_subject)
+            sorted_subjects.extend(sorted(other_subjects, key=lambda x: x['subject']))
+            sorted_subjects.extend(blank_nodes)
+
+            return render_template('view.html',
+                uri='/',
+                query_uri=uri,
+                query_uri_short=shorten_uri(uri),
+                subjects=sorted_subjects,
+                blank_nodes=blank_nodes
+            )
+
+        except Exception as e:
+            logger.error(f"Error retrieving datasets: {str(e)}")
+            return render_template('error.html',
+                message=f"500 - Internal server error: {str(e)}",
+                uri='/'), 500
+
+    # Regular URI handling
     if not matches_known_uri_patterns(uri):
         return render_template('error.html', 
             message="404 - URI not found",
             uri=uri), 404
 
-    if config.SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
-        return redirect(page_uri_to_identity_uri(uri))
+    if config.USE_SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
+        return redirect(page_uri_to_identity_uri(uri), 303)  # HTTP 303 See Other
 
-    if config.SEMANTIC_REDIRECTS is True:
+    if config.USE_SEMANTIC_REDIRECTS is True:
         page_uri = uri
         id_uri = page_uri_to_identity_uri(uri)
     else:
@@ -299,51 +377,47 @@ def resolve_uri(uri):
     if response:
         return response
 
-    # Default to HTML
-    # Get unique subjects from the graph
-    unique_subjects = {str(s) for s in rdf_graph.subjects()}
-    # logger.debug(f"Unique subjects found: {len(unique_subjects)}")
-    # logger.debug("All subjects in graph:")
-    # for s in unique_subjects:
-    #     logger.debug(f"  - {s}")
-    
-    # Process each unique subject
-    subjects = []
-    for s in unique_subjects:
-        # logger.debug(f"\nProcessing subject: {s}")
-        subject_data = process_subject(s, rdf_graph, is_main_subject=s == id_uri, id_uri=id_uri)
-        subjects.append(subject_data)
-    
-    # Sort subjects: main subject first, then all others
-    main_subject = None
-    other_subjects = []
+    # Process the graph for HTML view
+    subjects = defaultdict(list)
     blank_nodes = []
-    
-    for subject in subjects:
-        # logger.debug(f"Sorting subject: {subject['subject']}")
-        if subject['subject'] == id_uri:
-            logger.debug("  -> This is main subject")
-            main_subject = subject
+    main_subject = None
+
+    # Process each subject in the graph
+    for subject in set(rdf_graph.subjects()):
+        subject_uri = str(subject)
+        if isinstance(subject, BNode):
+            subject_data = process_subject(subject_uri, rdf_graph)
+            if subject_data:
+                blank_nodes.append(subject_data)
+            continue
+
+        subject_data = process_subject(subject_uri, rdf_graph, is_main_subject=(subject_uri == id_uri), id_uri=id_uri)
+        if not subject_data:
+            continue
+
+        if subject_uri == id_uri:
+            main_subject = subject_data
         else:
-            # logger.debug("  -> This is other subject")
-            if subject['is_blank']:
-                blank_nodes.append(subject)
-            elif subject['subject'] == uri:  # Alleen de opgevraagde URI toevoegen
-                other_subjects.append(subject)
-    
-    # Combine in correct order
+            subjects[subject_uri].append(subject_data)
+
+    # Convert subjects dict to list
+    other_subjects = []
+    for subject_uri, subject_list in subjects.items():
+        other_subjects.extend(subject_list)
+
+    # Sort subjects
     sorted_subjects = []
     if main_subject:
         sorted_subjects.append(main_subject)
     sorted_subjects.extend(sorted(other_subjects, key=lambda x: x['subject']))
-    sorted_subjects.extend(blank_nodes)  # Add blank nodes at the end
-    
+    sorted_subjects.extend(blank_nodes)
+
     return render_template('view.html',
         uri=uri,
         query_uri=id_uri,
         query_uri_short=shorten_uri(id_uri),
         subjects=sorted_subjects,
-        blank_nodes=blank_nodes  # Only pass actual blank nodes
+        blank_nodes=blank_nodes
     )
 
 @app.errorhandler(500)

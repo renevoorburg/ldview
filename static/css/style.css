@@ -15,6 +15,14 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
+.main-subject,
+.blank-node {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+}
+
 .main-subject {
     margin-bottom: 2rem;
     padding-bottom: 1rem;
@@ -271,22 +279,17 @@ h2 {
 }
 
 .blank-nodes-section {
-    margin-top: 2em;
-    border-top: 1px solid #eee;
-    padding-top: 1em;
+    margin-top: 2rem;
+}
+
+.blank-node {
+    margin-bottom: 1rem;
 }
 
 .blank-nodes-section h2 {
     color: #666;
     font-size: 1.4em;
     margin-bottom: 1em;
-}
-
-.blank-node {
-    margin-bottom: 2em;
-    background: #f9f9f9;
-    padding: 1em;
-    border-radius: 4px;
 }
 
 .blank-node h3 {
@@ -332,6 +335,13 @@ h2 {
 
 .predicate .local {
     color: #333;
+}
+
+.predicate-set {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
 }
 
 .map-container {

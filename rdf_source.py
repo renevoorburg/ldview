@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from rdflib import Graph
 import logging
+from SPARQLWrapper import SPARQLWrapper
+import config
 
 logger = logging.getLogger(__name__)
 
@@ -29,3 +31,25 @@ class RDFSource(ABC):
             ResourceNotFound: When the requested resource cannot be found
         """
         pass
+
+    def get_sparql_datasets(self):
+        """Get all datasets using SPARQL CONSTRUCT query"""
+        try:
+            sparql = SPARQLWrapper(config.SPARQL_ENDPOINT)
+            sparql.setQuery(config.HOME_PAGE_SPARQL_QUERY)
+            sparql.setReturnFormat('xml')
+            
+            # Create a new graph for the results
+            graph = Graph()
+            
+            # Execute query and parse results into graph
+            result = sparql.query().convert()
+            if isinstance(result, bytes):
+                graph.parse(data=result, format='xml')
+            else:
+                graph.parse(data=str(result), format='xml')
+                
+            return graph
+        except Exception as e:
+            logger.error(f"Error executing SPARQL query for datasets: {str(e)}")
+            return None

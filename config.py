@@ -1,32 +1,35 @@
-# Viewing model:
-SEMANTIC_REDIRECTS = False
+## ldview config ##
 
-# Semantic redirects setup:
-REDIRECT_STATUS_CODE = 303  # See Other
-URI_PATTERNS = {
-    'id': '/id/',     # Pattern voor identificatie URIs
-    'doc': '/doc/'    # Pattern voor document URIs
+BASE_URI = 'https://data.digitopia.nl/'
+
+# Viewing model
+USE_SEMANTIC_REDIRECTS = False
+
+# Redirect pattern for segmantic redirecs, when selected:
+SEMANTIC_URI_SEGMENTS = {
+    'identification': '/id/',     # Pattern voor identificatie URIs
+    'documentation': '/doc/'    # Pattern voor document URIs
 }
 
-# Source configuration
-RDF_SOURCE_TYPE = 'turtlefiles'  # Options: 'sparql', 'turtlefiles'
+# Date source configuration
+RDF_SOURCE_TYPE = 'sparql'  # Options: 'sparql', 'turtlefiles'
 
-# Turtle files source configuration
+# turtlefiles -> source configuration:
 TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
-TURTLE_FILES_BASE_URI = 'https://data.digitopia.nl/'  # Base URI for Turtle files
 
-
-# SPARQL endpoint source configuration
+# sparql -> endpoint configuration:
 SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 # SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 
+# Content negotiation settings
+SUPPORTED_OUTPUT_FORMATS = {
+    'text/html': 'html',
+    'application/rdf+xml': 'xml',
+    'text/turtle': 'turtle',
+    'application/ld+json': 'json-ld'
+}
 
-KNOWN_URI_PATTERNS = [ 
-    'https://data.digitopia.nl/',
-]
-
-
-# Namespace configuration
+# Namespaces as used in 'html' view: 
 NAMESPACES = {
     'rdanl': 'http://data.bibliotheken.nl/rdanl#',
     'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -39,16 +42,7 @@ NAMESPACES = {
     'dcterms': 'http://purl.org/dc/terms/'
 }
 
-# Content negotiation settings
-SUPPORTED_FORMATS = {
-    'text/html': 'html',
-    'application/rdf+xml': 'xml',
-    'text/turtle': 'turtle',
-    'application/ld+json': 'json-ld'
-}
-
-
-# Predicaat configuratie voor weergave
+# Predicate config for html viewer:
 LABEL_PREDICATES = [
     'http://www.w3.org/2004/02/skos/core#prefLabel',
     'http://www.w3.org/2000/01/rdf-schema#label',
@@ -86,7 +80,7 @@ COORDINATE_PREDICATES = {
     ]
 }
 
-# Predicaat groepen voor geordende weergave
+# Predicate groups for ordered and clustered display:
 PREDICATE_GROUPS = [
     [
         'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
@@ -140,3 +134,23 @@ PREDICATE_GROUPS = [
         'http://www.w3.org/2000/01/rdf-schema#seeAlso'
     ]   
 ]
+
+# SPARQL query homepage (datasets):
+HOME_PAGE_SPARQL_QUERY = """
+PREFIX schema: <http://schema.org/>
+
+CONSTRUCT {
+  ?s a schema:Dataset .  
+  ?s schema:name ?name .
+  ?s schema:description ?description .  
+  ?s schema:workExample ?work .
+  
+} WHERE {
+?s a schema:Dataset .
+?s schema:name ?name .
+?s schema:workExample ?work .  
+OPTIONAL {
+?s schema:description ?description .  
+  }  
+}
+"""
