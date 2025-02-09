@@ -156,6 +156,53 @@ td:nth-child(2) {
     color: #27ae60;
 }
 
+.inverse-subject-cell {
+    width: 40%;
+    padding: 5px;
+    vertical-align: top;
+    word-break: break-all;
+}
+
+.inverse-predicate-cell {
+    width: 20%;
+    padding: 5px;
+    vertical-align: top;
+}
+
+.inverse-target-cell {
+    width: 40%;
+    padding: 5px;
+    vertical-align: top;
+    word-break: break-all;
+}
+
+/* Inverse relations table */
+.inverse-relations-table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+.inverse-relations-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.inverse-relations-table .inverse-subject-cell {
+    width: 45%;
+    word-break: break-all;
+}
+
+.inverse-relations-table .inverse-predicate-cell {
+    width: 35%;
+}
+
+.inverse-relations-table .inverse-target-cell {
+    width: 20%;
+}
+
 .formats {
     margin-top: 2rem;
     padding: 15px;

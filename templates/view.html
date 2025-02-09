@@ -220,29 +220,49 @@
             {% endif %}
 
             {% if inverse_relations %}
-                <h3>Inverse Relations</h3>
-                <ul class="inverse-relations">
-                    {% for pred, data in inverse_relations.items() %}
-                    <li>
-                        <span class="predicate">
-                            <a href="{{ pred }}" class="predicate-link">
-                                <span class="prefix">{{ shorten_uri(pred).prefix }}</span><span class="local">{{ shorten_uri(pred).local }}</span>
-                            </a>
-                        </span>
-                        <ul class="subjects-list">
+                <div class="blank-node">
+                    <h3>Inverse Relations</h3>
+                    <table class="inverse-relations-table">
+                        <tbody>
+                            {% for pred, data in inverse_relations.items() %}
                             {% for subject in data.subjects %}
-                            <li><a href="{{ subject.uri }}" class="uri-object">{{ subject.uri }}</a></li>
+                            <tr>
+                                <td class="inverse-subject-cell" title="{{ subject.uri }}">
+                                    <a href="{{ subject.uri }}" class="uri-object">{{ subject.uri }}</a>
+                                </td>
+                                <td class="inverse-predicate-cell" title="{{ pred }}">
+                                    <span class="predicate">
+                                        <a href="{{ pred }}" class="predicate-link">
+                                            <span class="prefix">{{ shorten_uri(pred).prefix }}</span><span class="local">{{ shorten_uri(pred).local }}</span>
+                                        </a>
+                                    </span>
+                                </td>
+                                <td class="inverse-target-cell">
+                                    {% if main_subject.main_label %}
+                                        {{ main_subject.main_label }}
+                                    {% endif %}
+                                </td>
+                            </tr>
                             {% endfor %}
                             {% if data.total_count > config.MAX_INVERSE_SUBJECTS %}
-                            <li class="more-results">
-                                <em>... and {{ data.total_count - config.MAX_INVERSE_SUBJECTS }} more results</em>
-                                <a href="{{ data.yasgui_url }}" target="_blank">(see all using SPARQL)</a>
-                            </li>
+                            <tr>
+                                <td class="inverse-subject-cell">
+                                    <span class="more-results">
+                                        ... see <a href="{{ data.yasgui_url }}" target="_blank">all {{ data.total_count }} <span class="prefix">{{ shorten_uri(pred).prefix }}</span><span class="local">{{ shorten_uri(pred).local }}</span> </a> relations
+                                    </span>
+                                </td>
+                                <td class="inverse-predicate-cell">
+                                    <span class="more-results">
+                                       
+                                    </span>
+                                </td>
+                                <td class="inverse-target-cell"></td>
+                            </tr>
                             {% endif %}
-                        </ul>
-                    </li>
-                    {% endfor %}
-                </ul>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% endif %}
 
             <div class="formats">
