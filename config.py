@@ -165,4 +165,4 @@ OPTIONAL {
 YASGUI_PAGE = 'yasgui'  # Will be accessible at {BASE_URI}{YASGUI_PAGE}
 
 # Display configuration
-MAX_INVERSE_SUBJECTS = 1  # Maximum number of subjects to show for inverse relations
+MAX_INVERSE_SUBJECTS = 1 # Maximum number of subjects to show for inverse relations

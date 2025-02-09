@@ -445,7 +445,7 @@ def resolve_uri(uri):
                 if len(inverse_relations[pred]) < config.MAX_INVERSE_SUBJECTS:
                     inverse_relations[pred].append({
                         'uri': subj,
-                        'label': label or subj.split('/')[-1]
+                        'label': subj  # Gebruik de URI zelf als label
                     })
             
             # Build YASGUI links for predicates with more results
