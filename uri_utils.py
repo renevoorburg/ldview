@@ -13,15 +13,15 @@ def is_identity_uri(uri):
     """
     Check if the URI should be redirected (contains /id/)
     """
-    return config.SEMANTIC_URI_SEGMENTS['identification'] in uri
+    return config.SEMANTIC_REDIRECT_URI_SEGMENTS['identification'] in uri
 
 
 def get_sparql_uri(uri):
     """
     Get the URI to use for SPARQL query, transforming /doc/ to /id/
     """
-    if config.SEMANTIC_URI_SEGMENTS['documentation'] in uri:
-        return transform_uri(uri, config.SEMANTIC_URI_SEGMENTS['documentation'], config.SEMANTIC_URI_SEGMENTS['identification'])
+    if config.SEMANTIC_REDIRECT_URI_SEGMENTS['documentation'] in uri:
+        return transform_uri(uri, config.SEMANTIC_REDIRECT_URI_SEGMENTS['documentation'], config.SEMANTIC_REDIRECT_URI_SEGMENTS['identification'])
     return uri
 
 def shorten_uri(uri):
@@ -46,16 +46,16 @@ def page_uri_to_identity_uri(uri):
     """
     Convert document URI to id URI if needed
     """
-    if config.SEMANTIC_URI_SEGMENTS['documentation'] in uri:
-        return transform_uri(uri, config.SEMANTIC_URI_SEGMENTS['documentation'], config.SEMANTIC_URI_SEGMENTS['identification'])
+    if config.SEMANTIC_REDIRECT_URI_SEGMENTS['documentation'] in uri:
+        return transform_uri(uri, config.SEMANTIC_REDIRECT_URI_SEGMENTS['documentation'], config.SEMANTIC_REDIRECT_URI_SEGMENTS['identification'])
     return uri
 
 def identity_uri_to_page_uri(uri):
     """
     Convert id URI to document URI if needed
     """
-    if config.SEMANTIC_URI_SEGMENTS['identification'] in uri:
-        return transform_uri(uri, config.SEMANTIC_URI_SEGMENTS['identification'], config.SEMANTIC_URI_SEGMENTS['documentation'])
+    if config.SEMANTIC_REDIRECT_URI_SEGMENTS['identification'] in uri:
+        return transform_uri(uri, config.SEMANTIC_REDIRECT_URI_SEGMENTS['identification'], config.SEMANTIC_REDIRECT_URI_SEGMENTS['documentation'])
     return uri
 
 def matches_known_uri_patterns(uri):

@@ -6,13 +6,13 @@ BASE_URI = 'https://data.digitopia.nl/'
 USE_SEMANTIC_REDIRECTS = False
 
 # Redirect pattern for segmantic redirecs, when selected:
-SEMANTIC_URI_SEGMENTS = {
+SEMANTIC_REDIRECT_URI_SEGMENTS = {
     'identification': '/id/',     # Pattern voor identificatie URIs
     'documentation': '/doc/'    # Pattern voor document URIs
 }
 
 # Date source configuration
-RDF_SOURCE_TYPE = 'sparql'  # Options: 'sparql', 'turtlefiles'
+RDF_DATA_SOURCE_TYPE = 'sparql'  # Options: 'sparql', 'turtlefiles'
 
 # turtlefiles -> source configuration:
 TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files

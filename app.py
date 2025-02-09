@@ -28,12 +28,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize RDF source based on configuration
-if config.RDF_SOURCE_TYPE == 'sparql':
+if config.RDF_DATA_SOURCE_TYPE == 'sparql':
     rdf_source = SPARQLEndpoint(config.SPARQL_ENDPOINT)
-elif config.RDF_SOURCE_TYPE == 'turtlefiles':
+elif config.RDF_DATA_SOURCE_TYPE == 'turtlefiles':
     rdf_source = TurtleFiles(config.TURTLE_FILES_DIRECTORY, config.BASE_URI)
 else:
-    raise ValueError(f"Unknown RDF source type: {config.RDF_SOURCE_TYPE}")
+    raise ValueError(f"Unknown RDF source type: {config.RDF_DATA_SOURCE_TYPE}")
 
 def find_matching_values(predicates, triples):
     """Find all matching values for a list of predicates, maintaining predicate order"""
@@ -276,7 +276,7 @@ def resolve_uri(uri):
     if normalized_uri == base_uri:
         try:
             # Get homepage data based on source type
-            if config.RDF_SOURCE_TYPE == 'sparql':
+            if config.RDF_DATA_SOURCE_TYPE == 'sparql':
                 rdf_graph = rdf_source.get_sparql_datasets()
             else:
                 # Use configured turtle file for homepage in turtle mode
