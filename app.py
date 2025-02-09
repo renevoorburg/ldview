@@ -14,18 +14,11 @@ from rdf_source import ResourceNotFound
 from content_negotiation import ContentNegotiator
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# Set up logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('debug.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-
-logger = logging.getLogger(__name__)
+# Configure logging
+import logging
+logging.basicConfig(level=logging.INFO)
 
 # Initialize RDF source based on configuration
 if config.RDF_DATA_SOURCE_TYPE == 'sparql':
@@ -101,6 +94,7 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         return None
 
     is_blank = subject_uri.startswith('_:') or subject_uri.startswith('n')  # Also check for 'n' prefix
+    logger = logging.getLogger(__name__)
     logger.debug(f"Processing subject: {subject_uri} (blank node: {is_blank})")
 
     # Create the correct node based on whether it's a blank node or URI
@@ -258,12 +252,53 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         'coordinates_list': coordinates_list if coordinates_list else None
     }
 
+def create_rdf_response(graph, request):
+    """Create an RDF response based on content negotiation"""
+    return ContentNegotiator.get_response(
+        graph,
+        format_param=request.args.get('format'),
+        accept_header=request.headers.get('Accept', 'text/html')
+    )
+
+# Register error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('error.html',
+        message="404 - Page not found",
+        uri=request.path,
+        config=config), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('error.html',
+        message="500 - Internal server error",
+        uri=request.path,
+        config=config), 500
+
+# YASGUI route must be registered before the catch-all route
+@app.route('/<path:uri>')
+def handle_uri(uri):
+    """Handle all URIs - both YASGUI and regular URIs"""
+    app.logger.info(f'Handle URI called with: {uri}')
+    
+    # Check if this is the YASGUI request
+    if uri == 'https://data.digitopia.nl/yasgui':
+        app.logger.info('Serving YASGUI page')
+        if config.RDF_DATA_SOURCE_TYPE != 'sparql':
+            return render_template('error.html',
+                message="YASGUI interface is only available in SPARQL mode",
+                uri=f'/{uri}',
+                config=config), 404
+        return render_template('yasgui.html', config=config)
+    
+    # If not YASGUI, handle as regular URI
+    return resolve_uri(uri)
+
 @app.route('/')
 def root():
     """Root URL redirects to base URI"""
-    return resolve_uri(config.BASE_URI.strip('/'))
+    return redirect(config.BASE_URI.strip('/'))
 
-@app.route('/<path:uri>')
 def resolve_uri(uri):
     """
     Resolve a URI and return its representation
@@ -338,6 +373,7 @@ def resolve_uri(uri):
                 blank_nodes=blank_nodes)
 
         except Exception as e:
+            logger = logging.getLogger(__name__)
             logger.error(f"Error retrieving datasets: {str(e)}")
             return render_template('error.html',
                 message=f"500 - Internal server error: {str(e)}",
@@ -369,6 +405,7 @@ def resolve_uri(uri):
             uri=uri,
             config=config), 404
     except Exception as e:
+        logger = logging.getLogger(__name__)
         logger.error(f"Error retrieving RDF data: {str(e)}")
         return render_template('error.html',
             message=f"500 - Internal server error: {str(e)}",
@@ -426,12 +463,6 @@ def resolve_uri(uri):
         query_uri_short=shorten_uri(id_uri),
         subjects=sorted_subjects,
         blank_nodes=blank_nodes)
-
-@app.errorhandler(500)
-def internal_error(error):
-    if request.accept_mimetypes.best_match(['text/html']):
-        return render_template('error.html', error=error, config=config), 500
-    return str(error), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

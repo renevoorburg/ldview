@@ -12,7 +12,7 @@ SEMANTIC_REDIRECT_URI_SEGMENTS = {
 }
 
 # Date source configuration
-RDF_DATA_SOURCE_TYPE = 'turtlefiles'  # Options: 'sparql', 'turtlefiles'
+RDF_DATA_SOURCE_TYPE = 'sparql'  # Options: 'sparql', 'turtlefiles'
 
 # turtlefiles -> source configuration:
 TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
@@ -20,6 +20,9 @@ TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
 # sparql -> endpoint configuration:
 SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
 # SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
+
+# YASGUI configuration (only used when RDF_DATA_SOURCE_TYPE is 'sparql')
+YASGUI_PAGE = 'yasgui'  # Will be accessible at {BASE_URI}{YASGUI_PAGE}
 
 # Content negotiation settings
 SUPPORTED_OUTPUT_FORMATS = {
