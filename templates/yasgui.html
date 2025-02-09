@@ -13,11 +13,13 @@
     <div id="yasgui"></div>
 
     <script>
-        const yasgui = new Yasgui(document.getElementById("yasgui"), {
-            requestConfig: {
-                endpoint: "{{ config.SPARQL_ENDPOINT }}"
-            },
-            copyEndpointOnNewTab: true
+        document.addEventListener('DOMContentLoaded', function() {
+            const yasgui = new Yasgui(document.getElementById("yasgui"), {
+                requestConfig: {
+                    endpoint: "{{ config.SPARQL_ENDPOINT }}"
+                },
+                copyEndpointOnNewTab: true
+            });
         });
     </script>
 
@@ -25,6 +27,7 @@
         /* Adjust YASGUI to match our theme */
         #yasgui {
             margin-top: 1rem;
+            height: 600px;  /* Fixed height for better layout */
         }
         .yasgui .yasqe {
             border: 1px solid #ddd;

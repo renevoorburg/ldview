@@ -15,6 +15,8 @@ from content_negotiation import ContentNegotiator
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.jinja_env.auto_reload = True
+app.debug = True
 
 # Configure logging
 import logging
@@ -275,15 +277,10 @@ def internal_error(error):
         uri=request.path,
         config=config), 500
 
-# YASGUI route must be registered before the catch-all route
 @app.route('/<path:uri>')
 def handle_uri(uri):
     """Handle all URIs - both YASGUI and regular URIs"""
-    app.logger.info(f'Handle URI called with: {uri}')
-    
-    # Check if this is the YASGUI request
     if uri == 'https://data.digitopia.nl/yasgui':
-        app.logger.info('Serving YASGUI page')
         if config.RDF_DATA_SOURCE_TYPE != 'sparql':
             return render_template('error.html',
                 message="YASGUI interface is only available in SPARQL mode",
@@ -291,7 +288,6 @@ def handle_uri(uri):
                 config=config), 404
         return render_template('yasgui.html', config=config)
     
-    # If not YASGUI, handle as regular URI
     return resolve_uri(uri)
 
 @app.route('/')
