@@ -317,10 +317,12 @@ def resolve_uri(uri):
             # Get homepage data based on source type
             if config.RDF_DATA_SOURCE_TYPE == 'sparql':
                 rdf_graph = rdf_source.get_sparql_datasets()
+                id_uri = uri  # Expliciet id_uri zetten voor homepage
             else:
                 # Use configured turtle file for homepage in turtle mode
                 rdf_graph = rdf_source.get_rdf_for_uri(config.HOME_PAGE_TURTLEFILE)
-                    
+                id_uri = config.HOME_PAGE_TURTLEFILE  # Gebruik turtlefile als id_uri
+                
             if not rdf_graph:
                 return render_template('error.html',
                     message="No data found for homepage",
@@ -348,10 +350,11 @@ def resolve_uri(uri):
                     # Zoek de relatie tussen main subject en blank node
                     relation_to_main = None
                     relation_uri = None
-                    for s, p, o in rdf_graph.triples((URIRef(id_uri), None, subject)):
-                        relation_to_main = shorten_uri(str(p))
-                        relation_uri = str(p)
-                        break
+                    if id_uri:  # Alleen zoeken als we een id_uri hebben
+                        for s, p, o in rdf_graph.triples((URIRef(id_uri), None, subject)):
+                            relation_to_main = shorten_uri(str(p))
+                            relation_uri = str(p)
+                            break
                     
                     subject_data = process_subject(subject_uri, rdf_graph)
                     if subject_data:
