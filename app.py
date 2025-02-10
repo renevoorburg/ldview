@@ -439,10 +439,12 @@ def resolve_uri(uri):
     if config.RDF_DATA_SOURCE_TYPE == 'sparql' and rdf_graph:
         try:
             # Query for inverse relations
+            label_optionals = " ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
             inverse_query = f"""
                 SELECT DISTINCT ?p ?s ?label WHERE {{
                     ?s ?p <{uri}> .
-                    OPTIONAL {{ ?s rdfs:label ?label }}
+                    FILTER(!isBlank(?s))
+                    {label_optionals}
                 }} 
                 ORDER BY ?p ?s
             """
@@ -461,7 +463,7 @@ def resolve_uri(uri):
                 if len(inverse_relations[pred]) < config.MAX_INVERSE_SUBJECTS:
                     inverse_relations[pred].append({
                         'uri': subj,
-                        'label': subj  # Gebruik de URI zelf als label
+                        'label': label  # Gebruik de URI zelf als label
                     })
             
             # Build YASGUI links for predicates with more results
@@ -470,6 +472,7 @@ def resolve_uri(uri):
                 count_query = f"""
                     SELECT (COUNT(DISTINCT ?s) as ?count) WHERE {{
                         ?s <{pred}> <{uri}> .
+                        FILTER(!isBlank(?s))
                     }}
                 """
                 count_results = rdf_source.query(count_query)
@@ -482,10 +485,12 @@ def resolve_uri(uri):
                     yasgui_url = yasgui_base.replace('/yasgui/', '/yasgui') + '#'
                     
                     # Build YASGUI query
+                    label_optionals = " ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
                     yasgui_query = f"""
                         SELECT ?s ?label WHERE {{
                             ?s <{pred}> <{uri}> .
-                            OPTIONAL {{ ?s rdfs:label ?label }}
+                            FILTER(!isBlank(?s))
+                            {label_optionals}
                         }}
                         ORDER BY ?s
                     """
