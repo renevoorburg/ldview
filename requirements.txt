@@ -1,4 +1,5 @@
-Flask==2.0.3
-rdflib==6.1.2
+Flask==3.0.0
+rdflib==7.0.0
 SPARQLWrapper==2.0.0
+gunicorn==21.2.0
 python-dotenv==0.19.2  # Optioneel voor environment variables

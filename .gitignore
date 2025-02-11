@@ -43,3 +43,6 @@ dist/
 
 # Configuratie bestanden
 config.py  # Expliciet negeren van config met gevoelige data
+access.log
+error.log
+ldview.pid
