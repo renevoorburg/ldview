@@ -51,7 +51,7 @@ LDView is inspired by [LodView](https://github.com/LodLive/LodView), a widely-us
 
 ## License
 
-[Add your preferred license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Links
 
