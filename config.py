@@ -3,7 +3,7 @@
 BASE_URI = 'https://data.digitopia.nl/'
 
 # Viewing model
-USE_SEMANTIC_REDIRECTS = True
+USE_SEMANTIC_REDIRECTS = False
 
 # Redirect pattern for segmantic redirecs, when selected:
 SEMANTIC_REDIRECT_URI_SEGMENTS = {

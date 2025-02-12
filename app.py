@@ -29,15 +29,16 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 app = Flask(__name__)
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config.from_object('config')
 app.jinja_env.auto_reload = True
-app.debug = True
+app.debug = False
 
 # Configure logging
 import logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-logger.debug("Logger initialized at DEBUG level")
+logging.basicConfig(level=logging.WARNING)
+
+# Set app logger to WARNING
+logging.getLogger('app').setLevel(logging.WARNING)
 
 # Initialize RDF source based on configuration
 if config.RDF_DATA_SOURCE_TYPE == 'sparql':
@@ -601,4 +602,4 @@ SELECT ?s ?label WHERE {{
     )
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=False, port=5001)

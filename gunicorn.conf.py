@@ -1,7 +1,7 @@
 # Gunicorn configuration file
 
 # Server socket
-bind = '127.0.0.1:8000'
+bind = '0.0.0.0:8000'  # Listen on all interfaces
 backlog = 2048
 
 # Worker processes
@@ -15,9 +15,13 @@ keepalive = 2
 proc_name = 'ldview'
 
 # Logging
-accesslog = 'access.log'
-errorlog = 'error.log'
-loglevel = 'info'
+accesslog = '/var/log/ldview/access.log'
+errorlog = '/var/log/ldview/error.log'
+loglevel = 'warning'  # Changed from 'info' to 'warning'
+
+# Process management
+pidfile = '/var/run/ldview/gunicorn.pid'
+worker_tmp_dir = '/var/run/ldview'
 
 # SSL (uncomment if using HTTPS)
 # keyfile = 'path/to/keyfile'
@@ -25,7 +29,6 @@ loglevel = 'info'
 
 # Server mechanics
 daemon = False
-pidfile = 'ldview.pid'
 umask = 0
 user = None
 group = None
