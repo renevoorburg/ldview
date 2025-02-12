@@ -8,13 +8,12 @@ LDView is a modern Linked Data viewer and URI dereferencer, inspired by [LodView
 - **Interactive SPARQL Editor**: Built-in YASGUI editor for querying your data
 - **Rich Relationship Display**: Shows both direct and inverse relations between resources
 - **Dual Operation Modes**:
-  - Semantic Web style redirects
-  - Direct resource display
-- **Content Negotiation**: Supports various RDF formats based on client preferences
+  - Semantic Web style (`303 see other` redirects from *identification URI* to *documentation URI*)
+  - Direct resource display of provided URI
+- **Content Negotiation**: Supports various RDF formats based on user agent preferences
 - **Smart Visualization**: Automatic display of:
   - Images
   - Geographic maps
-  - Other media types based on the data
 
 ## Quick Start with Docker
 
@@ -28,7 +27,8 @@ docker compose up --build
 docker compose up -d
 ```
 
-The application will be available at `http://localhost:8000`.
+The application will be available at `http://localhost:8000`. 
+The configuration `BASE_URI` is used to determine what URI to be looked up. When set `"https://example.com/"`, an incoming request for `http://localhost:8000/data` will lookup RDF for the URI `https://example.com/data`.
 
 ## Configuration
 
