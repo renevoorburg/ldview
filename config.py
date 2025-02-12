@@ -146,15 +146,11 @@ HOME_PAGE_SPARQL_QUERY = """
 PREFIX schema: <http://schema.org/>
 
 CONSTRUCT {
-  ?s a schema:Dataset .  
   ?s schema:name ?name .
   ?s schema:description ?description .  
-  ?s schema:workExample ?work .
-  
 } WHERE {
 ?s a schema:Dataset .
-?s schema:name ?name .
-?s schema:workExample ?work .  
+?s schema:name ?name .  
 OPTIONAL {
 ?s schema:description ?description .  
   }  

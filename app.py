@@ -15,6 +15,18 @@ from content_negotiation import ContentNegotiator
 
 # Initialize logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+# Create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+
+# Add the console handler to the logger
+logger.addHandler(ch)
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -23,7 +35,9 @@ app.debug = True
 
 # Configure logging
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.debug("Logger initialized at DEBUG level")
 
 # Initialize RDF source based on configuration
 if config.RDF_DATA_SOURCE_TYPE == 'sparql':
@@ -283,11 +297,15 @@ def internal_error(error):
 @app.route('/<path:uri>')
 def handle_uri(uri):
     """Handle all URIs - both YASGUI and regular URIs"""
+    logger.debug(f"Entering handle_uri with path: {uri}")
+    uri = f"{config.BASE_URI}{uri}"
     yasgui_url = f"{config.BASE_URI}{config.YASGUI_PAGE}"
 
     normalized_uri = uri.replace('https://', '').replace('http://', '').strip('/')
     normalized_yasgui = yasgui_url.replace('https://', '').replace('http://', '').strip('/')
-    
+    logger.debug(f"Normalized URI: {normalized_uri}")
+    logger.debug(f"Normalized YASGUI: {normalized_yasgui}")
+
     if normalized_uri == normalized_yasgui:
         if config.RDF_DATA_SOURCE_TYPE != 'sparql':
             return render_template('error.html',
@@ -300,19 +318,13 @@ def handle_uri(uri):
 
 @app.route('/')
 def root():
-    """Root URL redirects to base URI"""
-    return redirect(config.BASE_URI.strip('/'))
+    return resolve_uri(config.BASE_URI)
 
 def resolve_uri(uri):
     """
     Resolve a URI and return its representation
     """
-    # Normalize URI by removing protocol and trailing slash
-    normalized_uri = uri.replace('https://', '').replace('http://', '').strip('/')
-    base_uri = config.BASE_URI.replace('https://', '').replace('http://', '').strip('/')
-    
-    # Check if this is the homepage (base URI)
-    if normalized_uri == base_uri:
+    if uri == config.BASE_URI:
         try:
             # Get homepage data based on source type
             if config.RDF_DATA_SOURCE_TYPE == 'sparql':
