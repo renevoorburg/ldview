@@ -491,9 +491,7 @@ def resolve_uri(uri):
                 
                 # Build YASGUI URL if we have more results than shown
                 if total_count > config.MAX_INVERSE_SUBJECTS:
-                    # Build the URL: BASE_URI + YASGUI_PAGE + #query=... + other params
-                    yasgui_base = '/' + config.YASGUI_PAGE.strip('/')
-                    yasgui_url = yasgui_base.replace('/yasgui/', '/yasgui') + '#'
+                    yasgui_url = '/' + config.YASGUI_PAGE.strip('/') + '#'
                     
                     # Build YASGUI query
                     label_optionals = "\n  ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)

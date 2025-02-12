@@ -15,8 +15,21 @@
     {% endblock %}
 </head>
 <body>
+    <nav class="menu-bar">
+        <div class="menu-container">
+            <a href="/" class="menu-item">Home</a>
+            <a href="/{{ config.YASGUI_PAGE }}" class="menu-item">SPARQL</a>
+        </div>
+    </nav>
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+    <footer class="footer">
+        <div class="footer-container">
+            <a href="https://github.com/renevoorburg/ldview" target="_blank" class="footer-link">
+                LDView on GitHub
+            </a>
+        </div>
+    </footer>
 </body>
 </html>
