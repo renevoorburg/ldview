@@ -298,15 +298,9 @@ def internal_error(error):
 def handle_uri(uri):
     """Handle all URIs - both YASGUI and regular URIs"""
     logger.debug(f"Entering handle_uri with path: {uri}")
-    uri = f"{config.BASE_URI}{uri}"
-    yasgui_url = f"{config.BASE_URI}{config.YASGUI_PAGE}"
 
-    normalized_uri = uri.replace('https://', '').replace('http://', '').strip('/')
-    normalized_yasgui = yasgui_url.replace('https://', '').replace('http://', '').strip('/')
-    logger.debug(f"Normalized URI: {normalized_uri}")
-    logger.debug(f"Normalized YASGUI: {normalized_yasgui}")
-
-    if normalized_uri == normalized_yasgui:
+    # Check if this is a YASGUI request
+    if uri == config.YASGUI_PAGE.strip('/'):
         if config.RDF_DATA_SOURCE_TYPE != 'sparql':
             return render_template('error.html',
                 message="YASGUI interface is only available in SPARQL mode",
@@ -314,10 +308,15 @@ def handle_uri(uri):
                 config=config), 404
         return render_template('yasgui.html', config=config)
     
-    return resolve_uri(uri)
+    # Construct full URI by appending to BASE_URI
+    full_uri = f"{config.BASE_URI}{uri}"
+    logger.debug(f"Full URI: {full_uri}")
+    
+    return resolve_uri(full_uri)
 
 @app.route('/')
 def root():
+    """Root URL redirects to base URI"""
     return resolve_uri(config.BASE_URI)
 
 def resolve_uri(uri):

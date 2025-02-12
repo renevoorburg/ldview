@@ -11,7 +11,7 @@
                         {% endif %}
 
                         <div class="uri-line">
-                            <h2><a href="{{ main_subject.subject }}" class="uri-object">&lt;{{ main_subject.subject }}&gt;</a></h2>
+                            <h2><a href="{{ main_subject.subject.replace(config.BASE_URI, '/') }}" class="uri-object">&lt;{{ main_subject.subject }}&gt;</a></h2>
                             {% if main_subject.types %}
                                 <div class="types">
                                     {% for type in main_subject.types %}
@@ -88,7 +88,7 @@
                                         {% if triple.predicate != ns.last_predicate %}
                                             <td class="predicate-cell" title="{{ triple.predicate }}">
                                                 <span class="predicate">
-                                                    <a href="{{ triple.predicate }}" class="predicate-link">
+                                                    <a href="{{ triple.predicate.replace(config.BASE_URI, '/') }}" class="predicate-link">
                                                         <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
                                                     </a>
                                                 </span>
@@ -99,7 +99,7 @@
                                         {% endif %}
                                         <td class="object-cell" title="{{ triple.object }}">
                                             {% if triple.object.startswith('http') %}
-                                                <a href="{{ triple.object }}" class="uri-object">&lt;{{ triple.object }}&gt;</a>
+                                                <a href="{{ triple.object.replace(config.BASE_URI, '/') }}" class="uri-object">&lt;{{ triple.object }}&gt;</a>
                                             {% elif triple.is_blank_object %}
                                                 <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
                                             {% else %}
@@ -119,10 +119,10 @@
                 {% if not subject.is_blank %}
                     <div class="blank-node">
                         <h3>
-                            <a href="{{ subject.subject }}" class="uri-object">&lt;{{ subject.subject }}&gt;</a>
+                            <a href="{{ subject.subject.replace(config.BASE_URI, '/') }}" class="uri-object">&lt;{{ subject.subject }}&gt;</a>
                             {% if subject.relation_to_main %} 
                                 (<span class="predicate">
-                                    <a href="{{ subject.relation_uri }}" class="predicate-link">
+                                    <a href="{{ subject.relation_uri.replace(config.BASE_URI, '/') }}" class="predicate-link">
                                         <span class="prefix">{{ subject.relation_to_main.prefix }}</span><span class="local">{{ subject.relation_to_main.local }}</span>
                                     </a>
                                 </span>)
@@ -137,7 +137,7 @@
                                             {% if triple.predicate != ns.last_predicate %}
                                                 <td class="predicate-cell" title="{{ triple.predicate }}">
                                                     <span class="predicate">
-                                                        <a href="{{ triple.predicate }}" class="predicate-link">
+                                                        <a href="{{ triple.predicate.replace(config.BASE_URI, '/') }}" class="predicate-link">
                                                             <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
                                                         </a>
                                                     </span>
@@ -148,7 +148,7 @@
                                             {% endif %}
                                             <td class="object-cell" title="{{ triple.object }}">
                                                 {% if triple.object.startswith('http') %}
-                                                    <a href="{{ triple.object }}" class="uri-object">&lt;{{ triple.object }}&gt;</a>
+                                                    <a href="{{ triple.object.replace(config.BASE_URI, '/') }}" class="uri-object">&lt;{{ triple.object }}&gt;</a>
                                                 {% elif triple.is_blank_object %}
                                                     <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
                                                 {% else %}
@@ -175,7 +175,7 @@
                     <div class="blank-node" id="{{ subject.subject }}">
                         <h3>{% if subject.relation_to_main %} 
                                 <span class="predicate">
-                                    <a href="{{ subject.relation_uri }}" class="predicate-link">
+                                    <a href="{{ subject.relation_uri.replace(config.BASE_URI, '/') }}" class="predicate-link">
                                         <span class="prefix">{{ subject.relation_to_main.prefix }}</span><span class="local">{{ subject.relation_to_main.local }}</span>
                                     </a>
                                 </span> →
@@ -189,7 +189,7 @@
                                             {% if triple.predicate != ns.last_predicate %}
                                                 <td class="predicate-cell" title="{{ triple.predicate }}">
                                                     <span class="predicate">
-                                                        <a href="{{ triple.predicate }}" class="predicate-link">
+                                                        <a href="{{ triple.predicate.replace(config.BASE_URI, '/') }}" class="predicate-link">
                                                             <span class="prefix">{{ triple.predicate_short.prefix }}</span><span class="local">{{ triple.predicate_short.local }}</span>
                                                         </a>
                                                     </span>
@@ -200,7 +200,7 @@
                                             {% endif %}
                                             <td class="object-cell" title="{{ triple.object }}">
                                                 {% if triple.object.startswith('http') %}
-                                                    <a href="{{ triple.object }}" class="uri-object">&lt;{{ triple.object }}&gt;</a>
+                                                    <a href="{{ triple.object.replace(config.BASE_URI, '/') }}" class="uri-object">&lt;{{ triple.object }}&gt;</a>
                                                 {% elif triple.is_blank_object %}
                                                     <a href="#{{ triple.object }}" class="blank-node-ref">{{ triple.object }}</a>
                                                 {% else %}
@@ -229,12 +229,12 @@
                                 {% for subject in data.subjects %}
                                     <tr>
                                         <td class="inverse-subject-cell" title="{{ subject.uri }}">
-                                            <a href="{{ subject.uri }}" class="uri-object">&lt;{{ subject.uri }}&gt;</a>
+                                            <a href="{{ subject.uri.replace(config.BASE_URI, '/') }}" class="uri-object">&lt;{{ subject.uri }}&gt;</a>
                                         </td>
                                         <td class="inverse-predicate-cell" title="{{ pred }}">
                                             {% if pred != ns.last_predicate %}
                                                 <span class="predicate">
-                                                    <a href="{{ pred }}" class="predicate-link">
+                                                    <a href="{{ pred.replace(config.BASE_URI, '/') }}" class="predicate-link">
                                                         <span class="prefix">{{ shorten_uri(pred).prefix }}</span><span class="local">{{ shorten_uri(pred).local }}</span>
                                                     </a>
                                                 </span>
