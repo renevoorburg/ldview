@@ -136,7 +136,7 @@ PREDICATE_GROUPS = [
 ]
 
 # Map configuration
-DEFAULT_MAP_ZOOM_LEVEL = 10  # Default zoom level for single point on map
+DEFAULT_MAP_ZOOM_LEVEL = 9  # Default zoom level for single point on map
 
 # Homepage configuration
 HOME_PAGE_TURTLEFILE = 'index.ttl'  # Turtle file to use for homepage in turtlefiles mode
