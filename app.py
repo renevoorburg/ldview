@@ -496,14 +496,13 @@ def resolve_uri(uri):
                     yasgui_url = yasgui_base.replace('/yasgui/', '/yasgui') + '#'
                     
                     # Build YASGUI query
-                    label_optionals = "\n    ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
+                    label_optionals = "\n  ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
                     yasgui_query = f"""
 SELECT ?s ?label WHERE {{
-    ?s <{pred}> <{uri}> .
-    FILTER(!isBlank(?s))
-    {label_optionals}
-}}
-ORDER BY ?s
+  ?s <{pred}> <{uri}> .
+  FILTER(!isBlank(?s))
+  {label_optionals}
+}} ORDER BY ?s
                     """
                     
                     yasgui_params = {
