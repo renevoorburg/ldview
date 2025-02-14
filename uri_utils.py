@@ -15,6 +15,12 @@ def is_identity_uri(uri):
     """
     return config.SEMANTIC_REDIRECT_URI_SEGMENTS['identification'] in uri
 
+def is_yasgui_uri(uri):
+    """
+    Check if the URI is a YASGUI request
+    """
+    return uri == f"{config.BASE_URI}{config.YASGUI_PAGE}"
+
 
 def get_sparql_uri(uri):
     """

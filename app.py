@@ -7,7 +7,7 @@ import json
 from collections import defaultdict
 from urllib.parse import urlparse, urlunparse, quote
 import sys
-from uri_utils import transform_uri, is_identity_uri, get_sparql_uri, shorten_uri, page_uri_to_identity_uri, matches_known_uri_patterns
+from uri_utils import transform_uri, is_identity_uri, is_yasgui_uri, shorten_uri, page_uri_to_identity_uri, identity_uri_to_page_uri, matches_known_uri_patterns
 from sparql_utils import SPARQLEndpoint
 from turtle_files import TurtleFiles
 from rdf_source import ResourceNotFound
@@ -295,25 +295,23 @@ def internal_error(error):
         uri=request.path,
         config=config), 500
 
-@app.route('/<path:uri>')
-def handle_uri(uri):
-    """Handle all URIs - both YASGUI and regular URIs"""
-    logger.debug(f"Entering handle_uri with path: {uri}")
+@app.route('/<path:request>')
+def handle_uri(request):
+    uri = f"{config.BASE_URI}{request}"
 
-    # Check if this is a YASGUI request
-    if uri == config.YASGUI_PAGE.strip('/'):
-        if config.RDF_DATA_SOURCE_TYPE != 'sparql':
+    if config.USE_SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
+        return redirect(identity_uri_to_page_uri(uri), 303) # see other
+
+    if is_yasgui_uri(uri):
+        if config.RDF_DATA_SOURCE_TYPE == 'sparql':
+            return render_template('yasgui.html', config=config)
+        else:
             return render_template('error.html',
                 message="YASGUI interface is only available in SPARQL mode",
                 uri=f'/{uri}',
                 config=config), 404
-        return render_template('yasgui.html', config=config)
-    
-    # Construct full URI by appending to BASE_URI
-    full_uri = f"{config.BASE_URI}{uri}"
-    logger.debug(f"Full URI: {full_uri}")
-    
-    return resolve_uri(full_uri)
+    else:
+        return resolve_uri(uri)
 
 @app.route('/')
 def root():
@@ -326,14 +324,13 @@ def resolve_uri(uri):
     """
     if uri == config.BASE_URI:
         try:
-            # Get homepage data based on source type
             if config.RDF_DATA_SOURCE_TYPE == 'sparql':
                 rdf_graph = rdf_source.get_sparql_datasets()
-                id_uri = uri  # Expliciet id_uri zetten voor homepage
+                id_uri = uri 
             else:
-                # Use configured turtle file for homepage in turtle mode
                 rdf_graph = rdf_source.get_rdf_for_uri(config.HOME_PAGE_TURTLEFILE)
-                id_uri = config.HOME_PAGE_TURTLEFILE  # Gebruik turtlefile als id_uri
+                # id_uri = config.HOME_PAGE_TURTLEFILE
+                id_uri = uri
                 
             if not rdf_graph:
                 return render_template('error.html',
@@ -418,9 +415,6 @@ def resolve_uri(uri):
             message="404 - URI not found",
             uri=uri,
             config=config), 404
-
-    if config.USE_SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
-        return redirect(identity_uri_to_page_uri(uri), 303)  # HTTP 303 See Other
 
     if config.USE_SEMANTIC_REDIRECTS is True:
         page_uri = uri
