@@ -41,6 +41,16 @@ All configuration options are available in `config.py`. Key settings include:
 
 For detailed configuration options, please refer to the comments in `config.py`.
 
+## Development
+
+To run the application in development mode, execute the following command:
+
+```bash
+python app.py
+```
+
+The application is typically deployed behind a reverse proxy (e.g., nginx). A sample nginx configuration is provided in the `nginx/example.conf` file.
+
 ## Development Status
 
 This is a prototype implementation, actively being developed and tested.
