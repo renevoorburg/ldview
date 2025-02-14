@@ -420,7 +420,7 @@ def resolve_uri(uri):
             config=config), 404
 
     if config.USE_SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
-        return redirect(page_uri_to_identity_uri(uri), 303)  # HTTP 303 See Other
+        return redirect(identity_uri_to_page_uri(uri), 303)  # HTTP 303 See Other
 
     if config.USE_SEMANTIC_REDIRECTS is True:
         page_uri = uri

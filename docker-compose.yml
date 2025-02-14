@@ -7,11 +7,11 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    volumes:
-      - type: bind
-        source: ./logs
-        target: /var/log/ldview
-    environment:
+    # volumes:
+    #   - type: bind
+    #     source: ./logs
+    #     target: /var/log/ldview
+    # environment:
       - FLASK_ENV=production
       - FLASK_DEBUG=0
       - PYTHONUNBUFFERED=1
