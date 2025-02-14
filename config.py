@@ -49,7 +49,10 @@ LABEL_PREDICATES = [
     'http://purl.org/dc/terms/title',
     'http://purl.org/dc/elements/1.1/title',
     'http://schema.org/name',
-    'http://data.bibliotheken.nl/rdanl#preferredNameOfPerson'
+    'http://data.bibliotheken.nl/rdanl#preferredNameOfPerson',
+    'http://data.bibliotheken.nl/rdanl#titleProper',
+    'http://data.bibliotheken.nl/rdanl#titleOfWork',
+    'http://data.bibliotheken.nl/rdanl#titleOfExpression',
 ]
 
 DESCRIPTION_PREDICATES = [

@@ -322,16 +322,21 @@ def resolve_uri(uri):
     """
     Resolve a URI and return its representation
     """
+
+    if config.USE_SEMANTIC_REDIRECTS is True:
+        page_uri = uri
+        id_uri = page_uri_to_identity_uri(uri)
+    else:
+        page_uri = uri
+        id_uri = uri
+
     if uri == config.BASE_URI:
         try:
             if config.RDF_DATA_SOURCE_TYPE == 'sparql':
                 rdf_graph = rdf_source.get_sparql_datasets()
-                id_uri = uri 
             else:
                 rdf_graph = rdf_source.get_rdf_for_uri(config.HOME_PAGE_TURTLEFILE)
-                # id_uri = config.HOME_PAGE_TURTLEFILE
-                id_uri = uri
-                
+
             if not rdf_graph:
                 return render_template('error.html',
                     message="No data found for homepage",
@@ -415,13 +420,6 @@ def resolve_uri(uri):
             message="404 - URI not found",
             uri=uri,
             config=config), 404
-
-    if config.USE_SEMANTIC_REDIRECTS is True:
-        page_uri = uri
-        id_uri = page_uri_to_identity_uri(uri)
-    else:
-        page_uri = uri
-        id_uri = uri
     
     try:
         rdf_graph = rdf_source.get_rdf_for_uri(id_uri, page_uri)
@@ -448,7 +446,7 @@ def resolve_uri(uri):
             label_optionals = " ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
             inverse_query = f"""
                 SELECT DISTINCT ?p ?s ?label WHERE {{
-                    ?s ?p <{uri}> .
+                    ?s ?p <{id_uri}> .
                     FILTER(!isBlank(?s))
                     {label_optionals}
                 }} 
@@ -477,7 +475,7 @@ def resolve_uri(uri):
                 # Count total results for this predicate
                 count_query = f"""
                     SELECT (COUNT(DISTINCT ?s) as ?count) WHERE {{
-                        ?s <{pred}> <{uri}> .
+                        ?s <{pred}> <{id_uri}> .
                         FILTER(!isBlank(?s))
                     }}
                 """
@@ -492,7 +490,7 @@ def resolve_uri(uri):
                     label_optionals = "\n  ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
                     yasgui_query = f"""
 SELECT ?s ?label WHERE {{
-  ?s <{pred}> <{uri}> .
+  ?s <{pred}> <{id_uri}> .
   FILTER(!isBlank(?s))
   {label_optionals}
 }} ORDER BY ?s
@@ -502,7 +500,7 @@ SELECT ?s ?label WHERE {{
                         'query': yasgui_query,
                         'endpoint': config.SPARQL_ENDPOINT,
                         'requestMethod': 'POST',
-                        'tabTitle': f'Inverse relations for {uri}',
+                        'tabTitle': f'Inverse relations for {id_uri}',
                         'headers': '{}'
                     }
                     
