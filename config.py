@@ -179,12 +179,12 @@ PREFIX schema: <http://schema.org/>
 CONSTRUCT {
   ?s schema:name ?name .
   ?s schema:description ?description .  
+  ?s schema:dateModified ?dateModified .
 } WHERE {
 ?s a schema:Dataset .
 ?s schema:name ?name .  
-OPTIONAL {
-?s schema:description ?description .  
-  }  
+OPTIONAL { ?s schema:description ?description . } 
+OPTIONAL { ?s schema:dateModified ?dateModified . }   
 }
 """
 
