@@ -41,14 +41,21 @@ All configuration options are available in `config.py`. Key settings include:
 
 For detailed configuration options, please refer to the comments in `config.py`.
 
-## Development
+## Getting Started
 
-To run the application in development mode, execute the following command:
+### Installation
+1. Clone the repository.
+2. Install dependencies (e.g., `pip install -r requirements.txt`).
+3. Set up your environment as needed.
 
+### Running Tests
+- Run tests with `pytest` or your preferred test command.
+
+### Development
+- To run the application in development mode, execute the following command:
 ```bash
 python app.py
 ```
-
 The application is typically deployed behind a reverse proxy (e.g., nginx). A sample nginx configuration is provided in the `nginx/example.conf` file.
 
 ## Development Status
