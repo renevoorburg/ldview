@@ -8,10 +8,10 @@ from collections import defaultdict
 from urllib.parse import urlparse, urlunparse, quote
 import sys
 from uri_utils import transform_uri, is_identity_uri, is_yasgui_uri, shorten_uri, page_uri_to_identity_uri, identity_uri_to_page_uri, matches_known_uri_patterns
-from sparql_utils import SPARQLEndpoint
-from turtle_files import TurtleFiles
-from rdf_source import ResourceNotFound
+from rdf_sources.rdf_source_factory import create_rdf_source
+from rdf_sources.rdf_source import ResourceNotFound
 from content_negotiation import ContentNegotiator
+from inverse_relations import get_inverse_relations
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -41,12 +41,7 @@ logging.basicConfig(level=logging.WARNING)
 logging.getLogger('app').setLevel(logging.WARNING)
 
 # Initialize RDF source based on configuration
-if config.RDF_DATA_SOURCE_TYPE == 'sparql':
-    rdf_source = SPARQLEndpoint(config.SPARQL_ENDPOINT)
-elif config.RDF_DATA_SOURCE_TYPE == 'turtlefiles':
-    rdf_source = TurtleFiles(config.TURTLE_FILES_DIRECTORY, config.BASE_URI)
-else:
-    raise ValueError(f"Unknown RDF source type: {config.RDF_DATA_SOURCE_TYPE}")
+rdf_source = create_rdf_source()
 
 def find_matching_values(predicates, triples):
     """Find all matching values for a list of predicates, maintaining predicate order"""
@@ -92,8 +87,6 @@ def group_predicates(predicates):
     
     return result
 
-
-
 def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
     """Process a subject URI and return its data"""
     # Get all predicates and objects for this subject
@@ -114,8 +107,6 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         return None
 
     is_blank = subject_uri.startswith('_:') or subject_uri.startswith('n')  # Also check for 'n' prefix
-    logger = logging.getLogger(__name__)
-    logger.debug(f"Processing subject: {subject_uri} (blank node: {is_blank})")
 
     # Create the correct node based on whether it's a blank node or URI
     if is_blank:
@@ -123,10 +114,8 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             subject_node = BNode(subject_uri[2:])
         else:
             subject_node = BNode(subject_uri)
-        logger.debug(f"Using BNode for blank node: {subject_node}")
     else:
         subject_node = URIRef(subject_uri)
-        logger.debug(f"Using URIRef for URI: {subject_node}")
 
     # First collect types
     type_count = 0
@@ -134,12 +123,10 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         type_uri = str(o)
         types.append(shorten_uri(type_uri))  # Now returns dict with prefix and local
         type_count += 1
-        logger.debug(f"Found type for {subject_uri}: {type_uri}")
 
     # First find the main label if this is the main subject
     if is_main_subject:
         main_label = find_label(subject_node)
-        logger.debug(f"Found main label for {subject_uri}: {main_label}")
 
     # Initialize blank_node_relations to ensure it's available for blank nodes
     blank_node_relations = {}
@@ -150,7 +137,6 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             linked_subject = str(o)
             predicate_str = shorten_uri(str(p))
             blank_node_relations[linked_subject] = predicate_str
-            logger.debug(f"Link from main subject: {subject_uri} -> {predicate_str} -> {linked_subject}")
 
     # Voor niet-main subjects, zoek naar inkomende relaties van het main subject
     relation_to_main = None
@@ -161,19 +147,10 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
                 predicate_str = str(p)
                 relation_to_main = shorten_uri(predicate_str)
                 relation_uri = predicate_str
-                logger.debug(f"Found relation to main: {str(s)} -> {predicate_str} -> {subject_uri}")
 
     for s, p, o in graph.triples((subject_node, None, None)):
         predicate = str(p)
         obj = str(o)
-        logger.debug(f"Found triple: {subject_uri} {predicate} {obj}")
-
-        # Verify predicate
-        logger.debug(f"Predicate: {predicate}")
-
-        # Set relation to main subject for linked subjects
-        if not is_main_subject:
-            logger.debug(f"Relation to main for {subject_uri}: {relation_to_main}")
         
         # Check if this is an image predicate
         if predicate in config.IMAGE_PREDICATES:
@@ -189,12 +166,12 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
             try:
                 current_coordinates['latitude'] = float(obj)
             except ValueError:
-                logger.warning(f"Invalid latitude value: {obj}")
+                pass
         elif predicate in config.COORDINATE_PREDICATES['longitude']:
             try:
                 current_coordinates['longitude'] = float(obj)
             except ValueError:
-                logger.warning(f"Invalid longitude value: {obj}")
+                pass
 
         # If we have a complete coordinate pair, add it to the list
         if current_coordinates['latitude'] is not None and current_coordinates['longitude'] is not None:
@@ -214,12 +191,12 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
                     try:
                         blank_coordinates['latitude'] = float(o)
                     except ValueError:
-                        logger.warning(f"Invalid latitude value in blank node: {o}")
+                        pass
                 elif str(p) in config.COORDINATE_PREDICATES['longitude']:
                     try:
                         blank_coordinates['longitude'] = float(o)
                     except ValueError:
-                        logger.warning(f"Invalid longitude value in blank node: {o}")
+                        pass
             
             # If both coordinates are found in the blank node, add them to the list
             if blank_coordinates['latitude'] is not None and blank_coordinates['longitude'] is not None:
@@ -231,17 +208,14 @@ def process_subject(subject_uri, graph, is_main_subject=False, id_uri=None):
         # For main subject, check for the first label if we haven't found one yet
         if is_main_subject and main_label is None and predicate in config.LABEL_PREDICATES:
             main_label = obj
-            logger.debug(f"Set main label for {subject_uri}: {obj}")
 
         # For main subject, collect all values for the first matching description predicate
         if is_main_subject and predicate in config.DESCRIPTION_PREDICATES:
             if main_description_predicate is None:
                 main_description_predicate = predicate
                 main_descriptions.append(obj)
-                logger.debug(f"Added first description for {subject_uri}: {obj}")
             elif predicate == main_description_predicate:
                 main_descriptions.append(obj)
-                logger.debug(f"Added additional description for {subject_uri}: {obj}")
 
         # For all predicates, include in the table
         predicates.append({
@@ -280,146 +254,16 @@ def create_rdf_response(graph, request):
         accept_header=request.headers.get('Accept', 'text/html')
     )
 
-# Register error handlers
-@app.errorhandler(404)
-def not_found(error):
-    return render_template('error.html',
-        message="404 - Page not found",
-        uri=request.path,
-        config=config), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return render_template('error.html',
-        message="500 - Internal server error",
-        uri=request.path,
-        config=config), 500
-
-@app.route('/<path:request>')
-def handle_uri(request):
-    uri = f"{config.BASE_URI}{request}"
-
-    if config.USE_SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
-        return redirect(identity_uri_to_page_uri(uri), 303) # see other
-
-    if is_yasgui_uri(uri):
-        if config.RDF_DATA_SOURCE_TYPE == 'sparql':
-            return render_template('yasgui.html', config=config)
-        else:
-            return render_template('error.html',
-                message="YASGUI interface is only available in SPARQL mode",
-                uri=f'/{uri}',
-                config=config), 404
-    else:
-        return resolve_uri(uri)
-
-@app.route('/')
-def root():
-    """Root URL redirects to base URI"""
-    return resolve_uri(config.BASE_URI)
-
 def resolve_uri(uri):
     """
     Resolve a URI and return its representation
     """
-
     if config.USE_SEMANTIC_REDIRECTS is True:
         page_uri = uri
         id_uri = page_uri_to_identity_uri(uri)
     else:
         page_uri = uri
         id_uri = uri
-
-    if uri == config.BASE_URI:
-        try:
-            if config.RDF_DATA_SOURCE_TYPE == 'sparql':
-                rdf_graph = rdf_source.get_sparql_datasets()
-            else:
-                rdf_graph = rdf_source.get_rdf_for_uri(config.HOME_PAGE_TURTLEFILE)
-
-            if not rdf_graph:
-                return render_template('error.html',
-                    message="No data found for homepage",
-                    uri='/',
-                    config=config), 404
-
-            # Handle content negotiation for homepage
-            response = ContentNegotiator.get_response(
-                rdf_graph,
-                format_param=request.args.get('format'),
-                accept_header=request.headers.get('Accept', 'text/html')
-            )
-            if response:
-                return response
-
-            # Process the graph for HTML view
-            subjects = defaultdict(list)
-            blank_nodes = []
-            main_subject = None
-
-            # Process each subject in the graph
-            for subject in set(rdf_graph.subjects()):
-                subject_uri = str(subject)
-                if isinstance(subject, BNode):
-                    # Zoek de relatie tussen main subject en blank node
-                    relation_to_main = None
-                    relation_uri = None
-                    if id_uri:  # Alleen zoeken als we een id_uri hebben
-                        for s, p, o in rdf_graph.triples((URIRef(id_uri), None, subject)):
-                            relation_to_main = shorten_uri(str(p))
-                            relation_uri = str(p)
-                            break
-                    
-                    subject_data = process_subject(subject_uri, rdf_graph)
-                    if subject_data:
-                        subject_data['relation_to_main'] = relation_to_main
-                        subject_data['relation_uri'] = relation_uri
-                        blank_nodes.append(subject_data)
-                    continue
-
-                subject_data = process_subject(subject_uri, rdf_graph, is_main_subject=(subject_uri == id_uri), id_uri=id_uri)
-                if not subject_data:
-                    continue
-
-                if not main_subject:
-                    main_subject = subject_data
-                else:
-                    subjects[subject_uri].append(subject_data)
-
-            # Convert subjects dict to list
-            other_subjects = []
-            for subject_uri, subject_list in subjects.items():
-                other_subjects.extend(subject_list)
-
-            # Sort subjects
-            sorted_subjects = []
-            if main_subject:
-                sorted_subjects.append(main_subject)
-            sorted_subjects.extend(sorted(other_subjects, key=lambda x: x['subject']))
-            sorted_subjects.extend(blank_nodes)
-
-            return render_template('view.html',
-                config=config,
-                uri='/',
-                query_uri=uri,
-                query_uri_short=shorten_uri(uri),
-                subjects=sorted_subjects,
-                blank_nodes=blank_nodes)
-
-        except Exception as e:
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error retrieving datasets: {str(e)}")
-            return render_template('error.html',
-                message=f"500 - Internal server error: {str(e)}",
-                uri='/',
-                config=config), 500
-
-    # Regular URI handling
-    if not matches_known_uri_patterns(uri):
-        return render_template('error.html', 
-            message="404 - URI not found",
-            uri=uri,
-            config=config), 404
     
     try:
         rdf_graph = rdf_source.get_rdf_for_uri(id_uri, page_uri)
@@ -429,103 +273,10 @@ def resolve_uri(uri):
             uri=uri,
             config=config), 404
     except Exception as e:
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error retrieving RDF data: {str(e)}")
         return render_template('error.html',
             message=f"500 - Internal server error: {str(e)}",
             uri=uri,
             config=config), 500
-
-    # Get inverse relations if using SPARQL
-    inverse_relations = {}
-    logger = logging.getLogger(__name__)
-    logger.debug(f"RDF data source type: {config.RDF_DATA_SOURCE_TYPE}")
-    if config.RDF_DATA_SOURCE_TYPE == 'sparql' and rdf_graph:
-        try:
-            # Query for inverse relations
-            label_optionals = " ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
-            inverse_query = f"""
-                SELECT DISTINCT ?p ?s ?label WHERE {{
-                    ?s ?p <{id_uri}> .
-                    FILTER(!isBlank(?s))
-                    {label_optionals}
-                }} 
-                ORDER BY ?p ?s
-            """
-            inverse_results = rdf_source.query(inverse_query)
-            
-            # Group results by predicate
-            inverse_relations = {}
-            for result in inverse_results:
-                pred = result['p']['value']
-                subj = result['s']['value']
-                label = result.get('label', {}).get('value', '')
-                
-                if pred not in inverse_relations:
-                    inverse_relations[pred] = []
-                
-                if len(inverse_relations[pred]) < config.MAX_INVERSE_SUBJECTS:
-                    inverse_relations[pred].append({
-                        'uri': subj,
-                        'label': label  # Gebruik de URI zelf als label
-                    })
-            
-            # Build YASGUI links for predicates with more results
-            for pred in inverse_relations:
-                # Count total results for this predicate
-                count_query = f"""
-                    SELECT (COUNT(DISTINCT ?s) as ?count) WHERE {{
-                        ?s <{pred}> <{id_uri}> .
-                        FILTER(!isBlank(?s))
-                    }}
-                """
-                count_results = rdf_source.query(count_query)
-                total_count = int(count_results[0]['count']['value']) if count_results else 0
-                
-                # Build YASGUI URL if we have more results than shown
-                if total_count > config.MAX_INVERSE_SUBJECTS:
-                    yasgui_url = '/' + config.YASGUI_PAGE.strip('/') + '#'
-                    
-                    # Build YASGUI query
-                    label_optionals = "\n  ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
-                    yasgui_query = f"""
-SELECT ?s ?label WHERE {{
-  ?s <{pred}> <{id_uri}> .
-  FILTER(!isBlank(?s))
-  {label_optionals}
-}} ORDER BY ?s
-                    """
-                    
-                    yasgui_params = {
-                        'query': yasgui_query,
-                        'endpoint': config.SPARQL_ENDPOINT,
-                        'requestMethod': 'POST',
-                        'tabTitle': f'Inverse relations for {id_uri}',
-                        'headers': '{}'
-                    }
-                    
-                    param_strings = []
-                    for key, value in yasgui_params.items():
-                        param_strings.append(f"{key}={quote(value)}")
-                    yasgui_url += '&'.join(param_strings)
-                    
-                    # Add URL to the results
-                    inverse_relations[pred] = {
-                        'subjects': inverse_relations[pred],
-                        'total_count': total_count,
-                        'yasgui_url': yasgui_url
-                    }
-                else:
-                    # Just wrap the subjects in a dict for consistent structure
-                    inverse_relations[pred] = {
-                        'subjects': inverse_relations[pred],
-                        'total_count': total_count
-                    }
-            
-            logger.debug(f"Final inverse relations: {inverse_relations}")
-        except Exception as e:
-            logger.error(f"Error getting inverse relations: {str(e)}")
-            inverse_relations = {}
 
     # Handle content negotiation
     response = ContentNegotiator.get_response(
@@ -536,7 +287,11 @@ SELECT ?s ?label WHERE {{
     if response:
         return response
 
-    # Process the graph for HTML view
+    # Build the HTML view
+    inverse_relations = {}
+    if config.RDF_DATA_SOURCE_TYPE == 'sparql' and rdf_graph and id_uri is not config.BASE_URI:
+        inverse_relations = get_inverse_relations(rdf_source, id_uri)
+   
     subjects = defaultdict(list)
     blank_nodes = []
     main_subject = None
@@ -592,6 +347,44 @@ SELECT ?s ?label WHERE {{
         query_uri_short=shorten_uri(id_uri),
         blank_nodes=blank_nodes
     )
+
+# Register error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('error.html',
+        message="404 - Page not found",
+        uri=request.path,
+        config=config), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('error.html',
+        message="500 - Internal server error",
+        uri=request.path,
+        config=config), 500
+
+@app.route('/<path:request>')
+def handle_uri(request):
+    uri = f"{config.BASE_URI}{request}"
+
+    if config.USE_SEMANTIC_REDIRECTS is True and is_identity_uri(uri):
+        return redirect(identity_uri_to_page_uri(uri), 303) # see other
+
+    if is_yasgui_uri(uri):
+        if config.RDF_DATA_SOURCE_TYPE == 'sparql':
+            return render_template('yasgui.html', config=config)
+        else:
+            return render_template('error.html',
+                message="YASGUI interface is only available in SPARQL mode",
+                uri=f'/{uri}',
+                config=config), 404
+    else:
+        return resolve_uri(uri)
+
+@app.route('/')
+def root():
+    """Root URL redirects to base URI"""
+    return resolve_uri(config.BASE_URI)
 
 if __name__ == '__main__':
     app.run(debug=False, port=5001)
