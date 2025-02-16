@@ -1,10 +1,7 @@
 from SPARQLWrapper import SPARQLWrapper
 from rdflib import Graph
-import logging
 import config
 from rdf_source import RDFSource, ResourceNotFound
-
-logger = logging.getLogger(__name__)
 
 class SPARQLEndpoint(RDFSource):
     """
@@ -33,59 +30,8 @@ class SPARQLEndpoint(RDFSource):
 
         sparql = SPARQLWrapper(self.endpoint_url)
         sparql.setTimeout(10)  # Set 10 second timeout
-        sparql.setQuery(f"""
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            
-            CONSTRUCT {{
-                ?s ?p ?o .
-                ?o ?p2 ?o2 .
-                ?o2 ?p3 ?o3 .
-            }}
-            WHERE {{
-                {{  # First part with id_uri
-                    VALUES ?s {{ <{id_uri}> }}
-                    {{
-                        ?s ?p ?o .
-                    }}
-                    UNION
-                    {{
-                        ?s ?p ?o .
-                        FILTER(isBlank(?o))
-                        ?o ?p2 ?o2 .
-                    }}
-                    UNION
-                    {{
-                        ?s ?p ?o .
-                        FILTER(isBlank(?o))
-                        ?o ?p2 ?o2 .
-                        FILTER(isBlank(?o2))
-                        ?o2 ?p3 ?o3 .
-                    }}
-                }}
-                UNION
-                {{  # Second part with page uri
-                    VALUES ?s {{ <{page_uri}> }}
-                    {{
-                        ?s ?p ?o .
-                    }}
-                    UNION
-                    {{
-                        ?s ?p ?o .
-                        FILTER(isBlank(?o))
-                        ?o ?p2 ?o2 .
-                    }}
-                    UNION
-                    {{
-                        ?s ?p ?o .
-                        FILTER(isBlank(?o))
-                        ?o ?p2 ?o2 .
-                        FILTER(isBlank(?o2))
-                        ?o2 ?p3 ?o3 .
-                    }}
-                }}
-            }}
-        """)
+        query = config.SPARQL_CONSTRUCT_QUERY.replace("{id_uri}", id_uri).replace("{page_uri}", page_uri)
+        sparql.setQuery(query)
         sparql.setReturnFormat('turtle')
         
         try:
@@ -94,12 +40,9 @@ class SPARQLEndpoint(RDFSource):
             # Parse into graph
             rdf_graph = Graph()
             if isinstance(results, bytes):
-                logger.debug(f"Got bytes result, length: {len(results)}")
-                logger.debug(f"Result content: {results[:1000]}")  # First 1000 bytes
                 rdf_graph.parse(data=results, format='turtle')
             else:
-                logger.debug(f"Got direct graph result, type: {type(results)}")
-                rdf_graph = results
+                rdf_graph = result
                 
             if len(rdf_graph) == 0:
                 raise ResourceNotFound(f"No data found in SPARQL endpoint for URI: {id_uri}")
@@ -107,9 +50,6 @@ class SPARQLEndpoint(RDFSource):
             return rdf_graph
             
         except Exception as e:
-            if isinstance(e, ResourceNotFound):
-                raise
-            logger.error(f"Error querying SPARQL endpoint for URI {id_uri}: {str(e)}")
             raise
 
     def get_sparql_datasets(self):
@@ -130,11 +70,9 @@ class SPARQLEndpoint(RDFSource):
                 rdf_graph.parse(data=str(results), format='turtle')
                 
             if len(rdf_graph) == 0:
-                logger.error("SPARQL query returned empty graph")
                 return None
                 
             return rdf_graph
             
         except Exception as e:
-            logger.error(f"Error executing SPARQL query for datasets: {str(e)}")
             return None

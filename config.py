@@ -3,7 +3,7 @@
 BASE_URI = 'https://data.digitopia.nl/'
 
 # Viewing model
-USE_SEMANTIC_REDIRECTS = True
+USE_SEMANTIC_REDIRECTS = True   
 
 # Redirect pattern for segmantic redirecs, when selected:
 SEMANTIC_REDIRECT_URI_SEGMENTS = {
@@ -137,6 +137,34 @@ PREDICATE_GROUPS = [
         'http://www.w3.org/2000/01/rdf-schema#seeAlso'
     ]   
 ]
+
+# SPARQL query template for constructing RDF from a URI
+SPARQL_CONSTRUCT_QUERY = """ 
+CONSTRUCT {
+    ?s ?p ?o .
+    ?o ?p2 ?o2 .
+    ?o2 ?p3 ?o3 .
+}
+WHERE {
+    {  # First part with id_uri
+        VALUES ?s { <{id_uri}> }
+        { ?s ?p ?o . }
+        UNION
+        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . }
+        UNION
+        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . FILTER(isBlank(?o2)) ?o2 ?p3 ?o3 . }
+    }
+    UNION
+    {  # Second part with page uri
+        VALUES ?s { <{page_uri}> }
+        { ?s ?p ?o . }
+        UNION
+        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . }
+        UNION
+        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . FILTER(isBlank(?o2)) ?o2 ?p3 ?o3 . }
+    }
+}
+"""
 
 # Map configuration
 DEFAULT_MAP_ZOOM_LEVEL = 9  # Default zoom level for single point on map
