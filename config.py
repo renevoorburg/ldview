@@ -1,9 +1,10 @@
 ## ldview config ##
 
+#BASE_URI = 'http://data.bibliotheken.nl/'
 BASE_URI = 'https://data.digitopia.nl/'
 
 # Viewing model
-USE_SEMANTIC_REDIRECTS = True   
+USE_SEMANTIC_REDIRECTS = True 
 
 # Redirect pattern for segmantic redirecs, when selected:
 SEMANTIC_REDIRECT_URI_SEGMENTS = {
@@ -19,7 +20,7 @@ TURTLE_FILES_DIRECTORY = 'resources'  # Directory containing .ttl files
 
 # sparql -> endpoint configuration:
 SPARQL_ENDPOINT = "https://data.digitopia.nl/sparql"  # Pas dit aan naar het gewenste endpoint
-# SPARQL_ENDPOINT = "https://data.bibliotheken.nl/sparql"  # Pas dit aan naar het gewenste endpoint
+#SPARQL_ENDPOINT = "https://api.bibliotheken.nl/datasets/KB/Production/services/Production-VTS/sparql"  # Pas dit aan naar het gewenste endpoint
 
 # Content negotiation settings
 SUPPORTED_OUTPUT_FORMATS = {
@@ -146,22 +147,28 @@ CONSTRUCT {
     ?o2 ?p3 ?o3 .
 }
 WHERE {
-    {  # First part with id_uri
-        VALUES ?s { <{id_uri}> }
-        { ?s ?p ?o . }
-        UNION
-        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . }
-        UNION
-        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . FILTER(isBlank(?o2)) ?o2 ?p3 ?o3 . }
+    VALUES ?s { 
+        <{id_uri}> 
+        <{page_uri}>
+    }
+
+    { ?s ?p ?o . }  # Directe triples ophalen
+    UNION
+    { 
+        ?s ?p ?o .
+        BIND(isBlank(?o) || CONTAINS(STR(?o), "/.well-known/genid/") AS ?isSkolem)
+        FILTER(?isSkolem)
+        ?o ?p2 ?o2 .  
     }
     UNION
-    {  # Second part with page uri
-        VALUES ?s { <{page_uri}> }
-        { ?s ?p ?o . }
-        UNION
-        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . }
-        UNION
-        { ?s ?p ?o . FILTER(isBlank(?o)) ?o ?p2 ?o2 . FILTER(isBlank(?o2)) ?o2 ?p3 ?o3 . }
+    { 
+        ?s ?p ?o .
+        BIND(isBlank(?o) || CONTAINS(STR(?o), "/.well-known/genid/") AS ?isSkolem)
+        FILTER(?isSkolem)
+        ?o ?p2 ?o2 .  
+        BIND(isBlank(?o2) || CONTAINS(STR(?o2), "/.well-known/genid/") AS ?isSkolem2)
+        FILTER(?isSkolem2)
+        ?o2 ?p3 ?o3 .  
     }
 }
 """
