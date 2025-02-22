@@ -11,7 +11,7 @@ from uri_utils import transform_uri, is_identity_uri, is_yasgui_uri, shorten_uri
 from rdf_sources.rdf_source_factory import create_rdf_source
 from rdf_sources.rdf_source import ResourceNotFound
 from content_negotiation import ContentNegotiator
-from inverse_relations import get_inverse_relations
+from inverse_relations import prerender_inverse_relations
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -289,8 +289,9 @@ def resolve_uri(uri):
 
     # Build the HTML view
     inverse_relations = {}
-    if config.RDF_DATA_SOURCE_TYPE == 'sparql' and rdf_graph and id_uri is not config.BASE_URI:
-        inverse_relations = get_inverse_relations(rdf_source, id_uri)
+    if rdf_graph and id_uri is not config.BASE_URI:
+        inverse_graph = rdf_source.get_inverse_relations_graph(id_uri)
+        inverse_relations = prerender_inverse_relations(inverse_graph, id_uri)
    
     subjects = defaultdict(list)
     blank_nodes = []

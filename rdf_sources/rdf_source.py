@@ -31,3 +31,16 @@ class RDFSource(ABC):
             ResourceNotFound: When the requested resource cannot be found
         """
         pass
+
+    @abstractmethod
+    def get_inverse_relations_graph(self, id_uri: str) -> Graph:
+        """
+        Get a graph containing all inverse relations for a given URI.
+        
+        Args:
+            id_uri: The URI to find inverse relations for
+            
+        Returns:
+            Graph: RDFLib Graph containing all triples where id_uri is the object
+        """
+        pass

@@ -2,6 +2,9 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import Graph
 import config
 from .rdf_source import RDFSource, ResourceNotFound
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SPARQLEndpoint(RDFSource):
     """
@@ -40,7 +43,7 @@ class SPARQLEndpoint(RDFSource):
             if isinstance(results, bytes):
                 rdf_graph.parse(data=results, format='turtle')
             else:
-                rdf_graph = result
+                rdf_graph = results
                 
             if len(rdf_graph) == 0:
                 raise ResourceNotFound(f"No data found in SPARQL endpoint for URI: {id_uri}")
@@ -61,3 +64,41 @@ class SPARQLEndpoint(RDFSource):
         except Exception as e:
             raise
 
+    def get_inverse_relations_graph(self, id_uri: str) -> Graph:
+        """
+        Get a graph containing all inverse relations for a given URI using a CONSTRUCT query.
+        
+        Args:
+            id_uri: The URI to find inverse relations for
+            
+        Returns:
+            Graph: RDFLib Graph containing all triples where id_uri is the object,
+                  including label predicates from config.LABEL_PREDICATES
+        """
+        # Build CONSTRUCT query that includes both the inverse relations and their labels
+        label_optionals = " ".join(f"OPTIONAL {{ ?s <{pred}> ?label }}" for pred in config.LABEL_PREDICATES)
+        construct_query = f"""
+            CONSTRUCT {{
+                ?s ?p <{id_uri}> .
+                ?s ?label_pred ?label .
+            }}
+            WHERE {{
+                ?s ?p <{id_uri}> .
+                FILTER(!isBlank(?s))
+                {label_optionals}
+            }}
+        """
+        
+        # Execute query and return the resulting graph
+        sparql = SPARQLWrapper(self.endpoint_url)
+        sparql.setQuery(construct_query)
+        sparql.setReturnFormat('turtle')  # Get result as Turtle format
+        
+        try:
+            result = sparql.queryAndConvert()
+            graph = Graph()
+            graph.parse(data=result, format='turtle')
+            return graph
+        except Exception as e:
+            logger.error(f"Error getting inverse relations graph: {str(e)}")
+            return Graph()

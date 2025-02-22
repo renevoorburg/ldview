@@ -51,3 +51,16 @@ class TurtleFiles(RDFSource):
         graph = Graph()
         graph.parse(file_path, format='turtle')
         return graph
+
+    def get_inverse_relations_graph(self, id_uri: str) -> Graph:
+        """
+        Get a graph containing all inverse relations for a given URI.
+        For TurtleFiles, this always returns an empty graph since we don't support inverse relations.
+        
+        Args:
+            id_uri: The URI to find inverse relations for
+            
+        Returns:
+            Graph: Empty RDFLib Graph since inverse relations are not supported
+        """
+        return Graph()
